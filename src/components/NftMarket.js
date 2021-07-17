@@ -64,7 +64,6 @@ class NftMarket extends Component {
         const smResponse = await fetch(hkURI);
         //const hkResponse = await fetch(hkURI);
         //const dpResponse = await fetch(dpURI);
-        console.log("ciao")
 
         if (!smResponse.ok)
           throw new Error(smResponse.statusText);
