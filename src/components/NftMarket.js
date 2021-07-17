@@ -10,6 +10,8 @@ import HulkErc721 from '../abis/HulkErc721.json'
 import SupermanErc721 from '../abis/SupermanErc721.json'
 import DeadpoolErc721 from '../abis/DeadpoolErc721.json'
 
+import HulkJson from '../public/hulk.json'
+
 class NftMarket extends Component {
 
   constructor(props) {
@@ -57,22 +59,22 @@ class NftMarket extends Component {
         const hk = new web3.eth.Contract(HulkErc721.abi, hulk.address)
         const dp = new web3.eth.Contract(DeadpoolErc721.abi, deadpool.address)
 
-        let smURI = await sm.methods.tokenURI(1).call()
-        let hkURI = await hk.methods.tokenURI(1).call()
-        let dpURI = await dp.methods.tokenURI(1).call()
+        //let smURI = await sm.methods.tokenURI(1).call()
+        //let hkURI = await hk.methods.tokenURI(1).call()
+        //let dpURI = await dp.methods.tokenURI(1).call()
 
-        const smResponse = await fetch(hkURI);
+        const hkResponse = await fetch(HulkJson);
+
         //const hkResponse = await fetch(hkURI);
         //const dpResponse = await fetch(dpURI);
 
-        if (!smResponse.ok)
-          throw new Error(smResponse.statusText);
+        if (!hkResponse.ok)
+          throw new Error(hkResponse.statusText);
 
+        //const smJson = await smResponse.json();
+        //this.state.metadata.push({ id: 0, name: smJson.name, description: smJson.description, image: smJson.image });
 
-        const smJson = await smResponse.json();
-        this.state.metadata.push({ id: 0, name: smJson.name, description: smJson.description, image: smJson.image });
-
-        //const hkJson = await hkResponse.json();
+        const hkJson = await hkResponse.json();
         //this.state.metadata.push({ id: 1, name: hkJson.name, description: hkJson.description, image: hkJson.image });
 
         //const dpJson = await dpResponse.json();
