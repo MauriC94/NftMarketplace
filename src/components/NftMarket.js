@@ -3,12 +3,12 @@ import { BrowserRouter as Router, Route, Switch, Link, Redirect } from 'react-ro
 import { PropTypes } from 'react'
 import Web3 from 'web3'
 import Navbar from "./Navbar"
-import Nft from "./components/Nft"
+import Nft from "../components/Nft"
 import Auction from "./Auction"
 
-import HulkErc721 from './abis/HulkErc721.json'
-import SupermanErc721 from './abis/SupermanErc721.json'
-import DeadpoolErc721 from './abis/DeadpoolErc721.json'
+import HulkErc721 from '../abis/HulkErc721.json'
+import SupermanErc721 from '../abis/SupermanErc721.json'
+import DeadpoolErc721 from '../abis/DeadpoolErc721.json'
 
 class NftMarket extends Component {
 
@@ -67,7 +67,7 @@ class NftMarket extends Component {
         console.log("ciao")
 
         if (!smResponse.ok)
-          throw new Error(response.statusText);
+          throw new Error(smResponse.statusText);
 
 
         const smJson = await smResponse.json();

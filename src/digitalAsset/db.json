@@ -1,0 +1,22 @@
+{
+    "tokens": [
+        {
+            "id": 0,
+            "description": "Superhuman strength, super speed, stamina and invulnerability",
+            "image": "https://twemoji.maxcdn.com/svg/1f40e.svg",
+            "name": "Superman"
+        },
+        {
+            "id": 1,
+            "description": "Superhuman strength, speed, stamina, and durability",
+            "image": "https://twemoji.maxcdn.com/svg/1f40e.svg",
+            "name": "Hulk"
+        },
+        {
+            "id": 2,
+            "description": "Merc with a Mouth",
+            "image": "https://twemoji.maxcdn.com/svg/1f40e.svg",
+            "name": "Deadpool"
+        }
+    ]
+}

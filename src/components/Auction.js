@@ -1,6 +1,6 @@
 import React, { Component } from 'react'
 import Web3 from 'web3'
-import AuctionToken from './abis/AuctionToken.json'
+import AuctionToken from '../abis/AuctionToken.json'
 import NftMarket from './NftMarket'
 
 class Auction extends Component {
