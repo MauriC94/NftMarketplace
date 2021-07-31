@@ -2,10 +2,10 @@ import React, { Component,useState } from 'react'
 import { BrowserRouter as Router, Route, Switch, Link, Redirect } from 'react-router-dom'
 import Web3 from 'web3'
 import './App.css'
-import Navbar from './Navbar'
 import Auction from './Auction'
 import Login from './Login'
-import NftMarket from './NftMarket'
+import NftMarketplace from './NftMarketplace'
+import OngoingAuction from './OngoingAuction'
 
 class App extends Component {
 
@@ -33,7 +33,7 @@ class App extends Component {
   constructor(props){
     super(props);
     this.state = {
-      loading: false
+      loading: true
     }
   }
   
@@ -43,8 +43,9 @@ class App extends Component {
         <div>
           <Switch>
             <Route path="/" exact component={Login} />
-            <Route path="/NftMarket" exact component={NftMarket} />
+            <Route path="/NftMarketplace" exact component={NftMarketplace} />
             <Route path="/Auction" exact component={Auction} />
+            <Route path='/OngoingAuction' exact component={OngoingAuction} />
           </Switch>
         </div>
       </Router>

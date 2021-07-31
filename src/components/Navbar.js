@@ -21,20 +21,19 @@ class Navbar extends Component {
     }
   }
 
-  logout(event){
+  logout(event) {
   }
 
   render() {
     return (
       <div className="navbar navbar-dark bg-dark shadow-sm">
-        <div className="container">
+        <div className="container-fluid">
           <a href="#" className="navbar-brand d-flex align-items-center">
-            <strong id="account">Account : {this.props.address} </strong>
+            <h6 id="account">Account : {this.props.address} </h6>
           </a>
+          <button onClick={this.props.getAuctions} className="btn btn-primary" type="submit">Ongoing Auctions</button>
+          <button onClick={()=>this.props.getAuctions()} className="btn btn-outline-success" type="submit">Logout</button>
         </div>
-        <form className="form-inline my-2 my-lg-0">
-          <button onClick={this.logout} className="btn btn-outline-success my-2 my-sm-0" type="submit">Logout</button>
-        </form>
       </div>
     );
   }
