@@ -17,6 +17,12 @@
             "description": "Superhuman strength, super speed, stamina and invulnerability",
             "image": "https://raw.githubusercontent.com/MauriC94/NftMarketplace/blob/main/digitalAsset/metadata/super.png",
             "name": "Superman"
+        },
+        {
+            "id":3,
+            "name": "John Wick",
+            "description": "Legendary hitman",
+            "image": "https://github.com/MauriC94/NftMarketplace/blob/main/digitalAsset/metadata/jwick.png"
         }
     ]
 }
