@@ -22,11 +22,7 @@
             "id":3,
             "name": "John Wick",
             "description": "Legendary hitman",
-<<<<<<< HEAD
-            "image": "https://raw.githubusercontent.com/MauriC94/NftMarketplace/blob/main/digitalAsset/metadata/jwick.png"
-=======
             "image": "https://raw.githubusercontent.com/MauriC94/NftMarketplace/main/metadata/jwick.png"
->>>>>>> 984efefe6c6be53cd88a3c36aa8b0ad79f726f33
         }
     ]
 }
