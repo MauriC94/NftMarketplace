@@ -10,22 +10,22 @@ import './HulkErc721.sol';
 contract NftMarket {
     
     address payable public auction_owner;
-    uint256 public auction_start;
-    uint256 public auction_end;
+    uint public auction_time;
+    uint public auction_end;
     uint256 public highestBid;
     address public highestBidder;
     uint256 public startingBid;
 
     IERC20 public token;
-
     ERC721 public erc721Contract;
+    uint256 public tokenId;
 
     enum auction_state{
-        CANCELLED,STARTED
+        OFF,STARTED,ENDED
     }
 
-    address [] bidders;
-    uint biddersCount = 0;
+    address[]public bidders;
+    uint public biddersCount = 0;
     mapping(address => uint) public pendingReturns;
     mapping(address => uint) public bids;
 
@@ -47,6 +47,7 @@ contract NftMarket {
     event WithdrawalEvent(address withdrawer, uint256 NftTokenURI); // termina l'asta
     event CanceledEvent(string message, uint256 time);  // annulla l'asta
     event Sent(address from, address to, uint amount);
+    event ERC721Transfer(address to, uint token);
     
   
     constructor (
@@ -54,17 +55,19 @@ contract NftMarket {
     )
     {
             token = _auctionToken;
-            //auction_owner = payable(msg.sender);
+            STATE = auction_state.OFF;
     }
 
-    function startAuction(address owner,uint256 amount, uint time, ERC721 _contract) external returns(bool){
-        auction_owner = payable(owner);
+    function startAuction(uint256 amount, uint time, ERC721 _contract, uint256 erc721Id) external returns(bool){
+       
+        auction_owner = payable(msg.sender);
+        auction_time = time;
         startingBid = amount;
-        auction_start = block.timestamp;
-        auction_end = auction_start + time;
+        tokenId = erc721Id;
+        auction_end = block.timestamp + time;
         STATE=auction_state.STARTED;
         erc721Contract = _contract;
-        emit startEvent(amount,auction_start);
+        emit startEvent(amount,auction_end);
         return true;
     }
  
@@ -75,7 +78,6 @@ contract NftMarket {
         require(msg.sender != auction_owner, "Owner can't bid");
         uint256 balance = token.balanceOf(msg.sender);
         require(amount <= balance, "Not enough tokens in the wallet");
-        token.approve(address(this), amount);
         if(highestBid != 0){
             uint256 refund = bids[highestBidder];
             pendingReturns[highestBidder] += refund;
@@ -88,17 +90,28 @@ contract NftMarket {
     }
   
     function cancel_auction() external only_owner  an_ongoing_auction returns (bool){
-    
-        STATE=auction_state.CANCELLED;
+        STATE=auction_state.OFF;
         emit CanceledEvent("Auction Cancelled", block.timestamp);
         return true;
     }
 
-    function addBidder(address bidder) public returns(bool){
-        bidders.push(bidder);
-        biddersCount ++;
-
+    function setTokenIdNft(uint256 id) public returns(bool){
+        tokenId = id;
         return true;
+    }
+
+    function addBidder() public returns(bool){
+        bidders.push(msg.sender);
+        biddersCount ++;
+        return true;
+    }
+
+    function checkBidder(address addr) public view returns(bool){
+        for(uint i=0; i<biddersCount; i++){
+            if(bidders[i] == addr)
+                return true;
+        }
+        return false;
     }
     
     
@@ -106,39 +119,30 @@ contract NftMarket {
         uint amount = pendingReturns[msg.sender];
         if(amount > 0){
             pendingReturns[msg.sender] = 0;
-            /*
-            if(!payable(msg.sender).send(amount)){
-                 pendingReturns[msg.sender] = amount;
-                 return false;
-            }
-            */
             token.transferFrom(address(this),msg.sender,amount);
         }
         emit WithdrawalEvent(msg.sender,amount);
         return true; 
     }
 
-    function auctionEnd() public returns(bool){
+    function auctionEnd() payable public returns(bool){
         require(block.timestamp > auction_end ,"You can't withdraw, the auction is still open");
-
-        uint256 tokenId = 1;
-        erc721Contract.approve(highestBidder,tokenId);
-        erc721Contract.safeTransferFrom(auction_owner, highestBidder, tokenId);
-
+        STATE=auction_state.ENDED;
+        erc721Contract.transferFrom(auction_owner, highestBidder, tokenId);
+        emit ERC721Transfer(highestBidder,tokenId);
         return true;
     }
 
     function resetAuction() public returns(bool){
-        auction_start = 0;
         auction_end = 0;
         startingBid = 0;
         highestBid = 0;
+        tokenId = 0;
 
         for(uint i=0; i<biddersCount; i++){
             address bidder = bidders[i];
             bids[bidder] = 0;
         }
-
         return true;
     }
 }

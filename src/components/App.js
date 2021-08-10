@@ -1,5 +1,5 @@
-import React, { Component,useState } from 'react'
-import { BrowserRouter as Router, Route, Switch, Link, Redirect } from 'react-router-dom'
+import React, { Component } from 'react'
+import { BrowserRouter as Router, Route, Switch } from 'react-router-dom'
 import Web3 from 'web3'
 import './App.css'
 import Auction from './Auction'

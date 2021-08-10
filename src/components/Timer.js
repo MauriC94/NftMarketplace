@@ -1,17 +1,28 @@
-import React, { Component } from 'react'
+import React, { Component, useState } from 'react'
 import NftMarket from '../abis/NftMarket.json'
 
 class Timer extends Component {
     constructor(props) {
         super(props);
         this.state = {
+            time: {},
+            timer: 0,
             over: false,
             loading: true
-        };
+        }
+        this.startTimer = this.startTimer.bind(this);
+        this.countDown = this.countDown.bind(this);
+        this.closeAuction = this.closeAuction.bind(this);
     }
+
     async componentDidMount() {
         await this.loadBlockchainData()
-        this.interval = setInterval(() => this.tick(), 1000);
+        if (this.state.timeLeft > 0) {
+            this.startTimer();
+        } else {
+            this.setState({ over: true });
+        }
+
     }
 
     async loadBlockchainData() {
@@ -21,8 +32,12 @@ class Timer extends Component {
 
         if (marketData) {
             const nftMarket = new web3.eth.Contract(NftMarket.abi, marketData.address)
-            let timer = await nftMarket.methods.auction_end().call()
-            this.setState({ timer })
+            const auctionTime = await nftMarket.methods.auction_end().call()
+            const timeLeft = auctionTime - Math.floor((new Date()).getTime() / 1000);
+            if(timeLeft < 0)
+                this.closeAuction();
+            this.setState({ timeLeft })
+
             let auctionState = await nftMarket.methods.STATE().call()
             this.setState({ auctionState })
 
@@ -32,17 +47,42 @@ class Timer extends Component {
         this.setState({ loading: false })
     }
 
-    tick() {
-        this.setState(state => ({
-            timer: state.timer - 1
-        }));
+    startTimer() {
+        this.timer = setInterval(this.countDown, 1000);
 
-        if (this.state.timer === 0) {
-            this.componentWillUnmount();
+    }
+
+    countDown() {
+        let seconds = this.state.timeLeft - 1;
+        this.setState({
+            time: this.secondsToTime(seconds),
+            timeLeft: seconds,
+        });
+
+        if (this.state.time.h === 0 && this.state.time.m === 0 && this.state.time.s === 0) { // da provare
+            console.log("time over");
+            this.closeAuction();
         }
     }
 
-    componentWillUnmount() {
+    secondsToTime(secs) {
+        let hours = Math.floor(secs / (60 * 60));
+
+        let divisor_for_minutes = secs % (60 * 60);
+        let minutes = Math.floor(divisor_for_minutes / 60);
+
+        let divisor_for_seconds = divisor_for_minutes % 60;
+        let seconds = Math.ceil(divisor_for_seconds);
+
+        let obj = {
+            "h": hours,
+            "m": minutes,
+            "s": seconds
+        };
+        return obj;
+    }
+
+    closeAuction() {
         clearInterval(this.interval);
         this.setState({ over: true });
         this.props.handleTimerOver();
@@ -51,7 +91,7 @@ class Timer extends Component {
     render() {
         return (
             <div>
-                {this.state.over ? "Time is Up!" : 'Seconds : ' + this.state.timer}
+                {this.state.over ? <h4>Time is up!!</h4> : ["H :" + this.state.time.h + " M : " + this.state.time.m + " S : " + this.state.time.s]}
             </div>
 
         );

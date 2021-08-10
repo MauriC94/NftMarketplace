@@ -1,15 +1,18 @@
-import React, { Component, useState } from 'react'
+import React, { Component } from 'react'
 import Web3 from 'web3'
 import Navbar from './Navbar'
 import Nft from './Nft'
-import CountdownTimer from './CountdownTimer'
 import Timer from './Timer'
 
 import NftMarket from '../abis/NftMarket.json'
 import Auction from '../abis/AuctionToken.json'
-import NftMarketplace from './NftMarketplace'
 import Bidders from './Bidders'
 import BidForm from './BidForm'
+
+import HulkErc721 from '../abis/HulkErc721.json'
+import SupermanErc721 from '../abis/SupermanErc721.json'
+import DeadpoolErc721 from '../abis/DeadpoolErc721.json'
+import JohnWickErc721 from '../abis/JohnWickErc721.json'
 
 class OngoingAuction extends Component {
 
@@ -32,6 +35,9 @@ class OngoingAuction extends Component {
         this.handleAuctionForm = this.handleAuctionForm.bind(this);
         this.withdraw = this.withdraw.bind(this);
         this.joinAuction = this.joinAuction.bind(this);
+        this.getBidders = this.getBidders.bind(this);
+        this.logoutUser = this.logoutUser.bind(this);
+        this.ercWinner = this.ercWinner.bind(this);
     }
     async componentDidMount() {
         await this.loadWeb3()
@@ -58,16 +64,25 @@ class OngoingAuction extends Component {
             this.setState({ highestBid })
             let highestBidder = await nftMarket.methods.highestBidder().call()
             this.setState({ highestBidder })
-            let count = await nftMarket.methods.bidsCounter().call()
-            this.setState({ count })
             let refund = await nftMarket.methods.pendingReturns(this.state.userAccount).call()
             this.setState({ refund })
+            let erc721 = await nftMarket.methods.erc721Contract().call()
             let auctionOwner = await nftMarket.methods.auction_owner().call()
             this.setState({ auctionOwner })
-            let erc721 = await nftMarket.methods.erc721Contract().call()
-            
 
-            if (erc721 === "0xe9DD4C346A1f06b9782e89b5B7F9EF2e5a81F3e6") { // superman
+            if (this.state.userAccount === this.state.auctionOwner) {
+                this.setState({ owner: true })
+            }
+            // fare il mint con il link del fetch -> improve
+
+            if (erc721 === "0x6A9A5EcaCC11102b6668a3c6c4733f947ba63229") { // superman
+                const superman = SupermanErc721.networks[networkId]
+                const erc721Addr = new web3.eth.Contract(SupermanErc721.abi, superman.address)
+                this.setState({ erc721Addr })
+                // salvo l'owner del contratto
+                let nftOwner = await erc721Addr.methods.ownerOf(1).call()
+                this.setState({ nftOwner })
+
                 const smResponse = await fetch("https://my-json-server.typicode.com/MauriC94/NftMarketplace/tokens/2");
 
                 if (!smResponse.ok)
@@ -76,11 +91,22 @@ class OngoingAuction extends Component {
                 const smJson = await smResponse.json();
                 this.state.metadata.push({ id: 2, name: smJson.name, description: smJson.description, image: smJson.image });
 
-
-            } else if (erc721 === "0x2abf116b6283aE25Ef7b501be4E697DcE52D58de") { // hulk
+            } else if (erc721 === "0x2015cE0A7De265B46E9c3B6D28277B16760A7fF1") { // hulk
+                const hulk = HulkErc721.networks[networkId]
+                const erc721Addr = new web3.eth.Contract(HulkErc721.abi, hulk.address)
+                this.setState({ erc721Addr })
                 const hkResponse = await fetch("https://my-json-server.typicode.com/MauriC94/NftMarketplace/tokens/1");
 
-            } else if (erc721 === "0x69d0b79EA7C2061eb3Cd4f86224d8289bc47fF21") { // deadpool
+                if (!hkResponse.ok)
+                    throw new Error(hkResponse.statusText);
+
+                const hkJson = await hkResponse.json();
+                this.state.metadata.push({ id: 2, name: hkJson.name, description: hkJson.description, image: hkJson.image });
+
+            } else if (erc721 === "0x9624c62F134844D3f648d474Ea7Cb2b97a1Da05F") { // deadpool
+                const deadpool = DeadpoolErc721.networks[networkId]
+                const erc721Addr = new web3.eth.Contract(DeadpoolErc721.abi, deadpool.address)
+                this.setState({ erc721Addr })
                 const dpResponse = await fetch("https://my-json-server.typicode.com/MauriC94/NftMarketplace/tokens/0");
 
                 if (!dpResponse.ok)
@@ -89,13 +115,24 @@ class OngoingAuction extends Component {
                 const dpJson = await dpResponse.json();
                 this.state.metadata.push({ id: 0, name: dpJson.name, description: dpJson.description, image: dpJson.image });
 
+            } else if (erc721 === "0x957E125026a9D29C9633922edf31d581D665909f") { // johnwick
+                const johnwick = JohnWickErc721.networks[networkId]
+                const erc721Addr = new web3.eth.Contract(JohnWickErc721.abi, johnwick.address)
+                this.setState({ erc721Addr })
+                const jwResponse = await fetch("https://my-json-server.typicode.com/MauriC94/NftMarketplace/tokens/3");
+
+                if (!jwResponse.ok)
+                    throw new Error(jwResponse.statusText);
+
+                const jwJson = await jwResponse.json();
+                this.state.metadata.push({ id: 0, name: jwJson.name, description: jwJson.description, image: jwJson.image });
+
             }
         } else {
             window.alert('NftMarket contract not deployed to detected network')
         }
 
         // Load TokenAuction
-
         const tokenData = Auction.networks[networkId]
 
         if (tokenData) {
@@ -108,14 +145,10 @@ class OngoingAuction extends Component {
 
         // Load Bid
 
-        const result = await this.state.nftMarket.methods.bids(this.state.userAccount).call();
-        const size = this.state.count;
-        const newArray = this.state.auctionBids.slice();
+        if (this.state.nftMarket.methods.checkBidder(this.state.userAccount).call())
+            this.setState({ join: true })
 
-        const data = ({ 'id': 0, 'bidder': this.state.userAccount, 'bidAmount': result });
-        newArray.push(data);
-
-        this.setState({ auctionBids: newArray });
+        this.getBidders()
         this.setState({ loading: false })
     }
 
@@ -141,9 +174,9 @@ class OngoingAuction extends Component {
     handleAuctionForm(e) {
         e.preventDefault();
         this.setState({ loading: true })
-        if(this.state.join == false){
+        if (this.state.join == false) {
             alert("You have to JOIN the Auction first!");
-        }else{
+        } else {
             this.state.tokenErc20.methods.approve(this.state.contractAddress, this.state.bid).send({ from: this.state.userAccount }).on('transactionHash', (hash) => {
                 this.state.nftMarket.methods.bid(this.state.bid).send({ from: this.state.userAccount }).on('transactionHash', (hash) => {
                 })
@@ -153,19 +186,18 @@ class OngoingAuction extends Component {
         }
     }
 
-    getBidders = async () => {
-        const usersJoined = await this.state.nftMarket.methods.bidders().call();
+    async getBidders() {
         const size = await this.state.nftMarket.methods.biddersCount().call();
         const newArray = this.state.auctionBids.slice();
 
-        for(var i=0; i<size; i++){
-            let user = usersJoined[i];
+        for (var i = 0; i < size; i++) {
+            let user = await this.state.nftMarket.methods.bidders(i).call();
             const result = await this.state.nftMarket.methods.bids(user).call();
             const data = ({ 'id': i, 'bidder': user, 'bidAmount': result });
             newArray.push(data);
-        } 
+        }
         this.setState({ auctionBids: newArray });
-    };
+    }
 
     withdraw(e) {
         this.setState({ loading: true })
@@ -176,52 +208,58 @@ class OngoingAuction extends Component {
         this.setState({ loading: false })
     }
 
-    handleTimerOver = async() => {
+    handleTimerOver = async () => {
         this.setState({ timer: true })
-
         const winner = await this.state.nftMarket.methods.highestBidder().call();
-        this.setState({ highestBidder:winner })
-        /*
+        this.setState({ highestBidder: winner })
+    };
+
+    joinAuction = async () => {
         this.setState({ loading: true })
-        this.state.nftMarket.methods.resetAuction().send({ from: this.state.userAccount }).on('transactionHash', (hash) => {
+        this.state.nftMarket.methods.addBidder().send({ from: this.state.userAccount }).on('transactionHash', (hash) => {
         })
         this.setState({ loading: false })
-        */
+        this.setState({ join: true });
     };
 
-    joinAuction = async() => {
-        this.setState({ join:true });
+    logoutUser() {
+        this.props.history.push('/');
+        localStorage.clear();
+    }
 
-        this.setState({ loading:true })
-        this.state.nftMarket.methods.addBidder().send({ from: this.state.userAccount }).on('transactionHash', (hash) => {
-            })
-        this.setState({ loading:false })
-    };
-
-    /*
-    endAuction = async() => {
-        this.setState({ loading:true })
-        this.state.nftMarket.methods.().send({ from: this.state.userAccount }).on('transactionHash', (hash) => {
+    endAuction = async () => {
+        this.setState({ loading: true })
+        this.state.nftMarket.methods.auctionEnd().send({ from: this.state.userAccount }).on('transactionHash', (hash) => {
         })
-        this.setState({ loading:false})
-
+        this.setState({ loading: false })
+        this.ercWinner()
     };
-    */
+
+    ercWinner() {
+
+        this.setState({ loading: true })
+        console.log(this.state.contractAddress)
+        this.state.erc721Addr.methods.approve(this.state.contractAddress, 1).send({ from: this.state.nftOwner }).on('transactionHash', (hash) => {
+            this.state.nftMarket.methods.auctionEnd().send({ from: this.state.userAccount }).on('transactionHash', (hash) => {
+            })
+        })
+        this.state.nftMarket.methods.resetAuction().send({ from: this.state.userAccount }).on('transactionHash', (hash) => {
+            })
+        this.setState({ loading: false })
+    }
 
     render() {
         let content
-        if (this.state.loading) {
-            content = <h4 id="loader" className="text-center">Loading ERC721 Token....</h4>
-        }
-        if(this.state.userAccount == this.state.auctionOwner){
-            this.setState({ owner:true })
+        if (!this.state.timer) {
+            content = <h2>Winner of the Auction : {this.state.highestBidder} </h2>
         }
         return (
             <>
                 <Navbar
                     address={this.state.userAccount}
+                    logoutUser={this.logoutUser}
                 />
-                <div className="container" style={{ width: '600px' }}>
+                <div className="container" style={{ width: '800px' }}>
                     <h4> {this.state.timer ? "WINNER : " + this.state.highestBidder : "Auction Base : " + this.state.startingBid} MCT </h4>
                     <div className="row">
                         {this.state.metadata.map(nft => (
@@ -233,7 +271,7 @@ class OngoingAuction extends Component {
                             />
                         ))}
                     </div>
-                    {this.state.owner ? <button onClick={this.joinAuction} type="submit" class="btn btn-primary"> Join Auction </button> : <button onClick={this.endAuction} type="submit" class="btn btn-danger"> End Auction </button> }
+                    {this.state.owner ? <button onClick={this.ercWinner} type="submit" className="btn btn-danger"> NFT </button> : <button onClick={this.joinAuction} type="submit" class="btn btn-primary"> Join Auction </button>}
                     <div className="container">
                         <div className="card-body">
                             <Timer
@@ -263,7 +301,7 @@ class OngoingAuction extends Component {
                         />
                     </div>
                     <div className="container" style={{ marginTop: '30px' }}>
-                        <button onClick={this.withdraw} type="submit" class="btn btn-success">Withdraw</button>
+                        {this.state.owner ? ' ' : <button onClick={this.withdraw} type="submit" class="btn btn-success">Withdraw</button>}
                     </div>
                 </div>
             </>

@@ -9,7 +9,7 @@ module.exports = async function (deployer) {
   await deployer.deploy(AuctionToken)
   const auctionToken = await AuctionToken.deployed()
 
-  /*
+/*
   await deployer.deploy(DeadpoolErc721)
   const deadpool = await DeadpoolErc721.deployed()
 
@@ -18,8 +18,7 @@ module.exports = async function (deployer) {
 
   await deployer.deploy(HulkErc721)
   const hulk = await HulkErc721.deployed()
-
-  */
+*/
 
   await deployer.deploy(NftMarket,auctionToken.address)
   const nftMarket = await NftMarket.deployed()

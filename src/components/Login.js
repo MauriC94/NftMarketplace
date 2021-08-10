@@ -1,8 +1,5 @@
-import React, { Component, useReducer } from 'react';
-import { BrowserRouter as Router, Route, Switch, Link, Redirect } from 'react-router-dom'
-import { PropTypes } from 'react';
+import React, { Component } from 'react';
 import './Login.css';
-import Navbar from "./Navbar";
 
 class Login extends Component {
 
@@ -27,20 +24,19 @@ class Login extends Component {
 
   handleSubmit(event) {
     event.preventDefault()
-    if (this.state.address == "0x138cd0dF5B11Bf9dda23f04231Bb23db225C6dC3" && this.state.password == "owner123") {
-      localStorage.setItem('address', this.state.address);
-      localStorage.setItem('password', this.state.password);
-      this.props.history.push('/NftMarketplace');
-
-    } else if (this.state.address == "0x4E2E2c34d3118aCc809aD2388D4A551627d0c88c" && this.state.password == "bidder123") {
+    if (this.state.address === "0x138cd0dF5B11Bf9dda23f04231Bb23db225C6dC3" && this.state.password === "owner123") {
       localStorage.setItem('address', this.state.address);
       this.props.history.push('/NftMarketplace');
 
-    } else if (this.state.email == "secondbidder@bidder.com" && this.state.password == "bidder345") {
+    } else if (this.state.address === "0x4E2E2c34d3118aCc809aD2388D4A551627d0c88c" && this.state.password === "bidder123") {
+      localStorage.setItem('address', this.state.address);
+      this.props.history.push('/NftMarketplace');
+
+    } else if (this.state.email === "secondbidder@bidder.com" && this.state.password === "bidder345") {
       this.state.userAccount = "0x3e007074340c3a5F2fbd957BDa764051158a3c1e";
-
+      localStorage.setItem('address', this.state.address);
+      this.props.history.push('/NftMarketplace');
     }
-    //this.props.history.push('/NftList');
   }
 
 

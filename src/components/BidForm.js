@@ -1,7 +1,4 @@
 import React, { Component } from 'react'
-import Web3 from 'web3'
-import AuctionToken from '../abis/AuctionToken.json'
-import NftForm from './NftForm';
 
 class BidForm extends Component {
 

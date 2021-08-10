@@ -1,6 +1,5 @@
 import React, { Component } from 'react'
 import Web3 from 'web3'
-import Login from './Login';
 
 class Navbar extends Component {
 
@@ -32,7 +31,7 @@ class Navbar extends Component {
             <h6 id="account">Account : {this.props.address} </h6>
           </a>
           <button onClick={this.props.getAuctions} className="btn btn-primary" type="submit">Ongoing Auctions</button>
-          <button onClick={()=>this.props.getAuctions()} className="btn btn-outline-success" type="submit">Logout</button>
+          <button onClick={()=>this.props.logoutUser()} className="btn btn-outline-success" type="submit">Logout</button>
         </div>
       </div>
     );
