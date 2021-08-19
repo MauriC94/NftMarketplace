@@ -5,7 +5,9 @@ import Navbar from "./Navbar"
 import Nft from "./Nft"
 import Auction from "./Auction"
 
+import Registry from '../abis/Registry.json'
 import NftMarket from '../abis/NftMarket.json'
+import AuctionToken from '../abis/AuctionToken.json'
 import HulkErc721 from '../abis/HulkErc721.json'
 import SupermanErc721 from '../abis/SupermanErc721.json'
 import DeadpoolErc721 from '../abis/DeadpoolErc721.json'
@@ -45,11 +47,24 @@ class NftMarketplace extends Component {
   async loadBlockchainNftData() {
     const web3 = window.web3
     const networkId = await web3.eth.net.getId()
+
     const marketData = NftMarket.networks[networkId]
     const nftMarket = new web3.eth.Contract(NftMarket.abi, marketData.address)
     this.setState({ nftMarket })
+
+    const registryData = Registry.networks[networkId]
+    const registry = new web3.eth.Contract(Registry.abi, registryData.address)
+    this.setState({ registry })
+
     const address = localStorage.getItem('address');
     this.setState({ userAccount: address });
+
+    const token = AuctionToken.networks[networkId]
+    const auctionToken = new web3.eth.Contract(AuctionToken.abi, token.address)
+    this.setState({ auctionToken })
+    
+    const balance = await auctionToken.methods.balanceOf(this.state.userAccount).call()
+    this.setState({ balance })
 
     const account1 = "0x138cd0dF5B11Bf9dda23f04231Bb23db225C6dC3";
     const account2 = "0x4E2E2c34d3118aCc809aD2388D4A551627d0c88c";
@@ -95,55 +110,56 @@ class NftMarketplace extends Component {
     this.setValue(erc721Map, jwOwner, this.state.ercJohnWick);
 
     this.setState({ erc721Map })
-
     const set = this.state.erc721Map.get(this.state.userAccount);
-    const iterator = set.values();
 
-    if (this.state.userAccount == account1) {
+    if (set) {
+      const iterator = set.values()
 
-      for (var i = 0; i < set.size; i++) {
-        const addr = iterator.next().value;
-        this.getUri(addr);
-        const response = await fetch(this.state.json);
+      if (this.state.userAccount == account1) {
 
-        if (!response.ok)
-          throw new Error(response.statusText);
+        for (var i = 0; i < set.size; i++) {
+          const addr = iterator.next().value;
+          this.getUri(addr);
+          const response = await fetch(this.state.json);
 
-        const json = await response.json();
+          if (!response.ok)
+            throw new Error(response.statusText);
 
-        this.state.metadata.push({ id: i, name: json.name, description: json.description, image: json.image });
+          const json = await response.json();
+
+          this.state.metadata.push({ id: i, name: json.name, description: json.description, image: json.image });
+        }
+
+      } else if (this.state.userAccount == account2) {
+
+        for (var i = 0; i < set.size; i++) {
+          const addr = iterator.next().value;
+          this.getUri(addr);
+          const response = await fetch(this.state.json);
+
+          if (!response.ok)
+            throw new Error(response.statusText);
+
+          const json = await response.json();
+          this.state.metadata.push({ id: i, name: json.name, description: json.description, image: json.image });
+        }
+
+      } else if (this.state.userAccount == account3) {
+
+        for (var i = 0; i < set.size; i++) {
+          const addr = iterator.next().value;
+          this.getUri(addr);
+          const response = await fetch(this.state.json);
+
+          if (!response.ok)
+            throw new Error(response.statusText);
+
+          const json = await response.json();
+          this.state.metadata.push({ id: i, name: json.name, description: json.description, image: json.image });
+        }
+
       }
-
-    } else if (this.state.userAccount == account2) {
-
-      for (var i = 0; i < set.size; i++) {
-        const addr = iterator.next().value;
-        this.getUri(addr);
-        const response = await fetch(this.state.json);
-
-        if (!response.ok)
-          throw new Error(response.statusText);
-
-        const json = await response.json();
-        this.state.metadata.push({ id: i, name: json.name, description: json.description, image: json.image });
-      }
-
-    } else if (this.state.userAccount == account3) {
-
-      for (var i = 0; i < set.size; i++) {
-        const addr = iterator.next().value;
-        this.getUri(addr);
-        const response = await fetch(this.state.json);
-
-        if (!response.ok)
-          throw new Error(response.statusText);
-
-        const json = await response.json();
-        this.state.metadata.push({ id: i, name: json.name, description: json.description, image: json.image });
-      }
-
     }
-
     this.setState({ loading: false })
   }
 
@@ -238,7 +254,7 @@ class NftMarketplace extends Component {
     this.setState({ loading: false })
   }
 
-  getNftContractAddress(name){
+  getNftContractAddress(name) {
     if (name === "Superman") {
       return this.state.ercSuperman;
     } else if (name === "Hulk") {
@@ -277,6 +293,7 @@ class NftMarketplace extends Component {
           address={this.state.userAccount}
           getAuctions={this.getAuctions}
           logoutUser={this.logoutUser}
+          balance={this.state.balance}
         />
         <div className="container">
           <div className="row">
@@ -290,15 +307,17 @@ class NftMarketplace extends Component {
               />
             ))}
           </div>
-          <Auction
-            ercMetadata={this.state.metadata}
-            handleNftChange={this.handleNftChange}
-            handleAuctionPrice={this.handleAuctionPrice}
-            handleDayAuction={this.handleDayAuction}
-            handleHoursAuction={this.handleHoursAuction}
-            handleMinutesAuction={this.handleMinutesAuction}
-            handleAuctionForm={this.handleAuctionForm}
-          />
+          <div className="card-body">
+            <Auction
+              ercMetadata={this.state.metadata}
+              handleNftChange={this.handleNftChange}
+              handleAuctionPrice={this.handleAuctionPrice}
+              handleDayAuction={this.handleDayAuction}
+              handleHoursAuction={this.handleHoursAuction}
+              handleMinutesAuction={this.handleMinutesAuction}
+              handleAuctionForm={this.handleAuctionForm}
+            />
+          </div>
         </div>
       </>
     );

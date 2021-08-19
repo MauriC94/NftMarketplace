@@ -34,10 +34,11 @@ class OngoingAuction extends Component {
         this.handleAuctionPrice = this.handleAuctionPrice.bind(this);
         this.handleAuctionForm = this.handleAuctionForm.bind(this);
         this.withdraw = this.withdraw.bind(this);
+        this.getWinBid = this.getWinBid.bind(this);
         this.joinAuction = this.joinAuction.bind(this);
+        this.endAuction = this.endAuction.bind(this);
         this.getBidders = this.getBidders.bind(this);
         this.logoutUser = this.logoutUser.bind(this);
-        this.ercWinner = this.ercWinner.bind(this);
     }
     async componentDidMount() {
         await this.loadWeb3()
@@ -138,6 +139,8 @@ class OngoingAuction extends Component {
         if (tokenData) {
             const tokenErc20 = new web3.eth.Contract(Auction.abi, tokenData.address)
             this.setState({ tokenErc20 })
+            const balance = await tokenErc20.methods.balanceOf(this.state.userAccount).call()
+            this.setState({ balance })
 
         } else {
             window.alert('Auction contract not deployed to detected network')
@@ -145,11 +148,16 @@ class OngoingAuction extends Component {
 
         // Load Bid
 
-        if (this.state.nftMarket.methods.checkBidder(this.state.userAccount).call())
+        if (this.state.nftMarket.methods.checkBidder(this.state.userAccount).call()) {
             this.setState({ join: true })
+        }
 
         this.getBidders()
         this.setState({ loading: false })
+
+        // Load Refund
+
+        this.getRefunds()
     }
 
     async loadWeb3() {
@@ -181,8 +189,8 @@ class OngoingAuction extends Component {
                 this.state.nftMarket.methods.bid(this.state.bid).send({ from: this.state.userAccount }).on('transactionHash', (hash) => {
                 })
             })
-            this.setState({ loading: false })
             this.setState({ auctionBids: this.state.bid })
+            this.setState({ loading: false })
         }
     }
 
@@ -199,6 +207,12 @@ class OngoingAuction extends Component {
         this.setState({ auctionBids: newArray });
     }
 
+    async getRefunds() {
+        const user = this.state.userAccount;
+        const refund = await this.state.nftMarket.methods.pendingReturns(user).call();
+        this.setState({ refund })
+    }
+
     withdraw(e) {
         this.setState({ loading: true })
         this.state.tokenErc20.methods.approve(this.state.contractAddress, this.state.refund).send({ from: this.state.userAccount }).on('transactionHash', (hash) => {
@@ -206,6 +220,16 @@ class OngoingAuction extends Component {
             })
         })
         this.setState({ loading: false })
+    }
+
+    getWinBid(e) {
+        this.setState({ loading: true })
+        this.state.tokenErc20.methods.approve(this.state.contractAddress, this.state.highestBid).send({ from: this.state.userAccount }).on('transactionHash', (hash) => {
+            this.state.nftMarket.methods.getWin().send({ from: this.state.userAccount }).on('transactionHash', (hash) => {
+            })
+        })
+        this.setState({ loading: false })
+
     }
 
     handleTimerOver = async () => {
@@ -216,10 +240,10 @@ class OngoingAuction extends Component {
 
     joinAuction = async () => {
         this.setState({ loading: true })
+        this.setState({ join: true });
         this.state.nftMarket.methods.addBidder().send({ from: this.state.userAccount }).on('transactionHash', (hash) => {
         })
         this.setState({ loading: false })
-        this.setState({ join: true });
     };
 
     logoutUser() {
@@ -227,60 +251,78 @@ class OngoingAuction extends Component {
         localStorage.clear();
     }
 
-    endAuction = async () => {
+    endAuction() {
         this.setState({ loading: true })
-        this.state.nftMarket.methods.auctionEnd().send({ from: this.state.userAccount }).on('transactionHash', (hash) => {
-        })
-        this.setState({ loading: false })
-        this.ercWinner()
-    };
-
-    ercWinner() {
-
-        this.setState({ loading: true })
-        console.log(this.state.contractAddress)
         this.state.erc721Addr.methods.approve(this.state.contractAddress, 1).send({ from: this.state.nftOwner }).on('transactionHash', (hash) => {
             this.state.nftMarket.methods.auctionEnd().send({ from: this.state.userAccount }).on('transactionHash', (hash) => {
             })
         })
-        this.state.nftMarket.methods.resetAuction().send({ from: this.state.userAccount }).on('transactionHash', (hash) => {
-            })
         this.setState({ loading: false })
+
     }
 
     render() {
         let content
-        if (!this.state.timer) {
-            content = <h2>Winner of the Auction : {this.state.highestBidder} </h2>
+        if (!this.state.owner) {
+            content = <div className="container">
+                <div className="card-body">
+                    <h3>
+                        {this.state.timer ? " " : "Make your Bid!"}
+                    </h3>
+                </div>
+                <BidForm
+                    handleAuctionPrice={this.handleAuctionPrice}
+                    handleAuctionForm={this.handleAuctionForm}
+                />
+            </div>
+        }
+        let win
+        if (this.state.owner && this.state.timer) {
+            win = <div className="container" style={{ marginTop: '20px' }}>
+                <button onClick={this.getWinBid} type="button" class="btn btn-success">
+                    GET WIN <span class="badge badge-light">{this.state.highestBid}</span>
+                </button>
+            </div>
         }
         return (
             <>
                 <Navbar
                     address={this.state.userAccount}
                     logoutUser={this.logoutUser}
+                    balance={this.state.balance}
                 />
                 <div className="container" style={{ width: '800px' }}>
-                    <h4> {this.state.timer ? "WINNER : " + this.state.highestBidder : "Auction Base : " + this.state.startingBid} MCT </h4>
-                    <div className="row">
-                        {this.state.metadata.map(nft => (
-                            < Nft
-                                key={nft.id}
-                                name={nft.name}
-                                description={nft.description}
-                                image={nft.image}
-                            />
-                        ))}
+                    <div className="card-body">
+                        <h3> {this.state.timer ? "WINNER : " + this.state.highestBidder : "Auction Base : " + this.state.startingBid} MCT </h3>
                     </div>
-                    {this.state.owner ? <button onClick={this.ercWinner} type="submit" className="btn btn-danger"> NFT </button> : <button onClick={this.joinAuction} type="submit" class="btn btn-primary"> Join Auction </button>}
-                    <div className="container">
-                        <div className="card-body">
-                            <Timer
-                                handleTimerOver={this.handleTimerOver.bind(this)}
-                            />
+                    <div className="h-100 p-5 text-black bg-dark rounded-3">
+                        <div className="container" style={{ marginLeft: '220px' }}>
+                            {this.state.metadata.map(nft => (
+                                < Nft
+                                    key={nft.id}
+                                    name={nft.name}
+                                    description={nft.description}
+                                    image={nft.image}
+                                />
+                            ))}
                         </div>
-                        <h2 style={{ color: 'green' }} >
-                            {this.state.timer ? "Auction End" : "Highest Bid : " + this.state.highestBid}
-                        </h2>
+                    </div>
+                    <div className="card-body">
+                        {this.state.owner ? <button onClick={this.endAuction} type="submit" class="btn btn-danger"> End Auction </button> : <button onClick={this.joinAuction} type="submit" class="btn btn-info"> Join Auction </button>}
+                    </div>
+                    <div className="p-5 mb-4 bg-light rounded-3">
+                        <div className="container">
+                            <div className="card-body">
+                                <Timer
+                                    handleTimerOver={this.handleTimerOver.bind(this)}
+                                />
+                            </div>
+                            <div className="card-body">
+                                <h2 style={{ color: 'green' }} >
+                                    {this.state.timer ? "Auction End" : "Highest Bid : " + this.state.highestBid + " MCT"}
+                                </h2>
+                            </div>
+                        </div>
                     </div>
                     <ul className="list-group">
                         {this.state.auctionBids.map(bid => (
@@ -291,17 +333,14 @@ class OngoingAuction extends Component {
                             />
                         ))}
                     </ul>
-                    <div className="container">
-                        <h3>
-                            {this.state.timer ? " " : "Make your Bid!"}
-                        </h3>
-                        <BidForm
-                            handleAuctionPrice={this.handleAuctionPrice}
-                            handleAuctionForm={this.handleAuctionForm}
-                        />
-                    </div>
+                    {content}
                     <div className="container" style={{ marginTop: '30px' }}>
-                        {this.state.owner ? ' ' : <button onClick={this.withdraw} type="submit" class="btn btn-success">Withdraw</button>}
+                        {this.state.owner ? ' ' : <button onClick={this.withdraw} type="button" class="btn btn-success">
+                            Withdraw <span class="badge badge-light">{this.state.refund}</span>
+                        </button>}
+                    </div>
+                    <div className="card-body">
+                        {win}
                     </div>
                 </div>
             </>

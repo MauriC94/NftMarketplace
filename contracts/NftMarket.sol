@@ -43,13 +43,14 @@ contract NftMarket {
     }
     
     event startEvent(uint256 amount, uint time);
-    event BidEvent(address indexed highestBidder, uint256 highestBid); //  
-    event WithdrawalEvent(address withdrawer, uint256 NftTokenURI); // termina l'asta
+    event BidEvent(address indexed highestBidder, uint256 highestBid);  
+    event WithdrawalEvent(address withdrawer, uint256 NftTokenURI);  // termina l'asta
     event CanceledEvent(string message, uint256 time);  // annulla l'asta
     event Sent(address from, address to, uint amount);
     event ERC721Transfer(address to, uint token);
+    event ERC20Transfer(address to, uint amount);
     
-  
+    /*
     constructor (
             IERC20 _auctionToken
     )
@@ -57,8 +58,15 @@ contract NftMarket {
             token = _auctionToken;
             STATE = auction_state.OFF;
     }
+    */
 
-    function startAuction(uint256 amount, uint time, ERC721 _contract, uint256 erc721Id) external returns(bool){
+    constructor(
+        uint256 amount, 
+        uint time, 
+        ERC721 _nftContract, 
+        ERC20 _tokenContract,
+        uint256 erc721Id
+    ){
        
         auction_owner = payable(msg.sender);
         auction_time = time;
@@ -66,11 +74,10 @@ contract NftMarket {
         tokenId = erc721Id;
         auction_end = block.timestamp + time;
         STATE=auction_state.STARTED;
-        erc721Contract = _contract;
-        emit startEvent(amount,auction_end);
-        return true;
+        erc721Contract = _nftContract;
+        token = _tokenContract;
+        //emit startEvent(amount,auction_end);
     }
- 
 
     function bid(uint256 amount) payable public {
       
@@ -86,6 +93,7 @@ contract NftMarket {
         highestBid = amount;
         bids[msg.sender] += amount;
         token.transferFrom(msg.sender,address(this),amount);
+
         emit BidEvent(highestBidder,highestBid);
     }
   
@@ -112,17 +120,15 @@ contract NftMarket {
                 return true;
         }
         return false;
-    }
+    }  
     
-    
-    function withdraw() public returns(bool) {
+    function withdraw() public payable {
         uint amount = pendingReturns[msg.sender];
         if(amount > 0){
             pendingReturns[msg.sender] = 0;
-            token.transferFrom(address(this),msg.sender,amount);
+            token.transfer(msg.sender,amount);
         }
         emit WithdrawalEvent(msg.sender,amount);
-        return true; 
     }
 
     function auctionEnd() payable public returns(bool){
@@ -130,13 +136,19 @@ contract NftMarket {
         STATE=auction_state.ENDED;
         erc721Contract.transferFrom(auction_owner, highestBidder, tokenId);
         emit ERC721Transfer(highestBidder,tokenId);
+        resetAuction();
         return true;
+    }
+
+    function getWin() public payable only_owner{
+        token.transfer(auction_owner,highestBid);
+        emit ERC20Transfer(auction_owner,highestBid);
+        highestBid = 0;
     }
 
     function resetAuction() public returns(bool){
         auction_end = 0;
         startingBid = 0;
-        highestBid = 0;
         tokenId = 0;
 
         for(uint i=0; i<biddersCount; i++){

@@ -25,15 +25,16 @@ class Navbar extends Component {
 
   render() {
     return (
-      <div className="navbar navbar-dark bg-dark shadow-sm">
+      <nav className="navbar navbar-dark bg-dark shadow-sm">
         <div className="container-fluid">
-          <a href="#" className="navbar-brand d-flex align-items-center">
-            <h6 id="account">Account : {this.props.address} </h6>
-          </a>
+          <a className="navbar-brand"> Account : {this.props.address} </a>
+          <a className="navbar-brand">Balance : {this.props.balance} MCT</a>
           <button onClick={this.props.getAuctions} className="btn btn-primary" type="submit">Ongoing Auctions</button>
+          <form className="d-flex">
           <button onClick={()=>this.props.logoutUser()} className="btn btn-outline-success" type="submit">Logout</button>
+          </form>
         </div>
-      </div>
+      </nav>
     );
   }
 }

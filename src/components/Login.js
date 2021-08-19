@@ -32,8 +32,7 @@ class Login extends Component {
       localStorage.setItem('address', this.state.address);
       this.props.history.push('/NftMarketplace');
 
-    } else if (this.state.email === "secondbidder@bidder.com" && this.state.password === "bidder345") {
-      this.state.userAccount = "0x3e007074340c3a5F2fbd957BDa764051158a3c1e";
+    } else if (this.state.address === "0xCB36091327e0150c7f4D3E5e690C04CAd1C9a768" && this.state.password === "bidder345") {
       localStorage.setItem('address', this.state.address);
       this.props.history.push('/NftMarketplace');
     }

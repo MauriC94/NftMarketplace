@@ -34,7 +34,7 @@ class Timer extends Component {
             const nftMarket = new web3.eth.Contract(NftMarket.abi, marketData.address)
             const auctionTime = await nftMarket.methods.auction_end().call()
             const timeLeft = auctionTime - Math.floor((new Date()).getTime() / 1000);
-            if(timeLeft < 0)
+            if (timeLeft < 0)
                 this.closeAuction();
             this.setState({ timeLeft })
 
@@ -90,8 +90,10 @@ class Timer extends Component {
 
     render() {
         return (
-            <div>
-                {this.state.over ? <h4>Time is up!!</h4> : ["H :" + this.state.time.h + " M : " + this.state.time.m + " S : " + this.state.time.s]}
+            <div className="card">
+                <div className="card-body">
+                    {this.state.over ? <h4>Time is up!!</h4> : ["H : " + this.state.time.h + "  " + " M : " + this.state.time.m + "  " + " S : " + this.state.time.s]}
+                </div>
             </div>
 
         );
