@@ -1,6 +1,7 @@
 {
     "id":3,
     "name": "John Wick",
+    "symbol": "JW",
     "description": "Legendary hitman",
     "image": "https://github.com/MauriC94/NftMarketplace/blob/main/digitalAsset/metadata/jwick.png"
 }
