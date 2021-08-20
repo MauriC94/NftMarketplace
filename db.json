@@ -4,25 +4,29 @@
             "id": 0,
             "description": "Merc with a Mouth",
             "image": "https://raw.githubusercontent.com/MauriC94/NftMarketplace/main/metadata/dead.png",
-            "name": "Deadpool"
+            "name": "Deadpool",
+            "symbol": "DE"
         },
         {
             "id": 1,
             "description": "Superhuman strength, speed, stamina, and durability",
             "image": "https://raw.githubusercontent.com/MauriC94/NftMarketplace/main/metadata/hulk.png",
-            "name": "Hulk"
+            "name": "Hulk",
+            "symbol": "HE"
         },
         {
             "id": 2,
             "description": "Superhuman strength, super speed, stamina and invulnerability",
             "image": "https://raw.githubusercontent.com/MauriC94/NftMarketplace/main/metadata/super.png",
-            "name": "Superman"
+            "name": "Superman",
+            "symbol": "SE"
         },
         {
             "id":3,
             "name": "John Wick",
             "description": "Legendary hitman",
-            "image": "https://raw.githubusercontent.com/MauriC94/NftMarketplace/main/metadata/jwick.png"
+            "image": "https://raw.githubusercontent.com/MauriC94/NftMarketplace/main/metadata/jwick.png",
+            "symbol": "JW"
         }
     ]
 }
