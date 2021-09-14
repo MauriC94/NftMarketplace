@@ -2,10 +2,10 @@
     "tokens": [
         {
             "id": 0,
-            "description": "Merc with a Mouth",
-            "image": "https://raw.githubusercontent.com/MauriC94/NftMarketplace/main/metadata/dead.png",
-            "name": "Deadpool",
-            "symbol": "DE"
+            "description": "Super Soldier serum",
+            "image": "https://raw.githubusercontent.com/MauriC94/NftMarketplace/main/metadata/captain.png",
+            "name": "Captain America",
+            "symbol": "CA"
         },
         {
             "id": 1,
@@ -23,10 +23,38 @@
         },
         {
             "id":3,
-            "name": "John Wick",
-            "description": "Legendary hitman",
-            "image": "https://raw.githubusercontent.com/MauriC94/NftMarketplace/main/metadata/jwick.png",
-            "symbol": "JW"
+            "name": "Cinderella",
+            "description": "Young woman with medium-length strawberry-blonde hair, blue eyes, and fair complexion",
+            "image": "https://raw.githubusercontent.com/MauriC94/NftMarketplace/main/metadata/cinda.png",
+            "symbol": "CR"
+        },
+        {
+            "id":4,
+            "name": "Groot",
+            "description": "An extraterrestrial, sentient tree-like creature",
+            "image": "https://raw.githubusercontent.com/MauriC94/NftMarketplace/main/metadata/grut.png",
+            "symbol": "GO"
+        },
+        {
+            "id":5,
+            "name": "Cyborg",
+            "description": "Human Cyborg",
+            "image": "https://raw.githubusercontent.com/MauriC94/NftMarketplace/main/metadata/marvel.png",
+            "symbol": "HC"
+        },
+        {
+            "id":6,
+            "name": "Peter Pan",
+            "description": "The Boy Who Wouldn't Grow Up",
+            "image": "https://raw.githubusercontent.com/MauriC94/NftMarketplace/main/metadata/peter.png",
+            "symbol": "PP"
+        },
+        {
+            "id":7,
+            "name": "Axl Rose",
+            "description": "American musician, singer, songwriter and record producer",
+            "image": "https://raw.githubusercontent.com/MauriC94/NftMarketplace/main/metadata/pg01.png",
+            "symbol": "AR"
         }
     ]
 }
