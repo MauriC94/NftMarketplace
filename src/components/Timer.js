@@ -22,28 +22,22 @@ class Timer extends Component {
         } else {
             this.setState({ over: true });
         }
-
     }
 
     async loadBlockchainData() {
         const web3 = window.web3
         const networkId = await web3.eth.net.getId()
-        const marketData = NftMarket.networks[networkId]
 
-        if (marketData) {
-            const nftMarket = new web3.eth.Contract(NftMarket.abi, marketData.address)
-            const auctionTime = await nftMarket.methods.auction_end().call()
-            const timeLeft = auctionTime - Math.floor((new Date()).getTime() / 1000);
-            if (timeLeft < 0)
-                this.closeAuction();
-            this.setState({ timeLeft })
+        const auctionAddress = localStorage.getItem('auction');
+        this.setState({ auctionAddress })
 
-            let auctionState = await nftMarket.methods.STATE().call()
-            this.setState({ auctionState })
+        const nftMarket = new web3.eth.Contract(NftMarket.abi, auctionAddress)
+        const auctionTime = await nftMarket.methods.auction_end().call()
+        const timeLeft = auctionTime - Math.floor((new Date()).getTime() / 1000);
+        if (timeLeft < 0)
+            this.closeAuction();
+        this.setState({ timeLeft })
 
-        } else {
-            window.alert('NftMarket contract not deployed to detected network')
-        }
         this.setState({ loading: false })
     }
 
@@ -59,8 +53,7 @@ class Timer extends Component {
             timeLeft: seconds,
         });
 
-        if (this.state.time.h === 0 && this.state.time.m === 0 && this.state.time.s === 0) { // da provare
-            console.log("time over");
+        if (this.state.time.h === 0 && this.state.time.m === 0 && this.state.time.s === 0) {
             this.closeAuction();
         }
     }

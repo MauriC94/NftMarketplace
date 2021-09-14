@@ -1,0 +1,9 @@
+erc20 : 0xFe115B1CC3B40A1E81D61efd9FF89800BA19803d
+
+erc721
+
+superman : 0x6A9A5EcaCC11102b6668a3c6c4733f947ba63229 '../abis/SupermanErc721.json'
+hulk : 0x2015cE0A7De265B46E9c3B6D28277B16760A7fF1   '../abis/HulkErc721.json'
+deadpool : 0x9624c62F134844D3f648d474Ea7Cb2b97a1Da05F   '../abis/DeadpoolErc721.json'
+johnwick : 0x957E125026a9D29C9633922edf31d581D665909f   '../abis/JohnWickErc721.json'
+

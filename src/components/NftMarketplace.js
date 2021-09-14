@@ -3,15 +3,13 @@ import { BrowserRouter as Router, Route, Switch, Link, Redirect } from 'react-ro
 import Web3 from 'web3'
 import Navbar from "./Navbar"
 import Nft from "./Nft"
-import Auction from "./Auction"
+import AuctionForm from "./AuctionForm"
 
-import Registry from '../abis/Registry.json'
+import './NftMarketplace.css';
+
 import NftMarket from '../abis/NftMarket.json'
+import Registry from '../abis/Registry.json'
 import AuctionToken from '../abis/AuctionToken.json'
-import HulkErc721 from '../abis/HulkErc721.json'
-import SupermanErc721 from '../abis/SupermanErc721.json'
-import DeadpoolErc721 from '../abis/DeadpoolErc721.json'
-import JohnWickErc721 from '../abis/JohnWickErc721.json'
 
 class NftMarketplace extends Component {
 
@@ -20,17 +18,19 @@ class NftMarketplace extends Component {
     this.state = {
       nftMarket: '0x0',
       nftAuction: '',
+      auctionToken: '0x0',
       auctionPrice: '',
       auctionDays: '',
       auctionHours: '',
       auctionMinutes: '',
       userAccount: '0x0',
       metadata: [],
-      erc721Contracts: [],
       loading: true
     }
     this.logoutUser = this.logoutUser.bind(this);
     this.getAuctions = this.getAuctions.bind(this);
+    this.myAuctions = this.myAuctions.bind(this);
+    this.rewards = this.rewards.bind(this);
     this.handleAuctionPrice = this.handleAuctionPrice.bind(this);
     this.handleNftChange = this.handleNftChange.bind(this);
     this.handleDayAuction = this.handleDayAuction.bind(this);
@@ -45,119 +45,61 @@ class NftMarketplace extends Component {
   }
 
   async loadBlockchainNftData() {
+    const address = localStorage.getItem('address');
+    this.setState({ userAccount: address });
+
     const web3 = window.web3
     const networkId = await web3.eth.net.getId()
-
-    const marketData = NftMarket.networks[networkId]
-    const nftMarket = new web3.eth.Contract(NftMarket.abi, marketData.address)
-    this.setState({ nftMarket })
 
     const registryData = Registry.networks[networkId]
     const registry = new web3.eth.Contract(Registry.abi, registryData.address)
     this.setState({ registry })
 
-    const address = localStorage.getItem('address');
-    this.setState({ userAccount: address });
+    const tokenData = AuctionToken.networks[networkId]
+    const tokenErc20 = new web3.eth.Contract(AuctionToken.abi, tokenData.address)
+    this.setState({ tokenErc20 })
+
+    const size = await registry.methods.contractCreated().call();
+    var refund = 0;
+
+    for (var i = 0; i < size; i++) {
+      const auctionData = await registry.methods.allAuctions(i).call();
+      let nftMarket = new web3.eth.Contract(NftMarket.abi, auctionData);
+      let data = await nftMarket.methods.pendingReturns(this.state.userAccount).call();
+      refund = refund + parseInt(data);
+    }
+    this.setState({ refund });
 
     const token = AuctionToken.networks[networkId]
     const auctionToken = new web3.eth.Contract(AuctionToken.abi, token.address)
-    this.setState({ auctionToken })
-    
+    this.setState({ auctionToken: token.address })
+
     const balance = await auctionToken.methods.balanceOf(this.state.userAccount).call()
     this.setState({ balance })
 
-    const account1 = "0x138cd0dF5B11Bf9dda23f04231Bb23db225C6dC3";
-    const account2 = "0x4E2E2c34d3118aCc809aD2388D4A551627d0c88c";
-    const account3 = "0xCB36091327e0150c7f4D3E5e690C04CAd1C9a768";
+    const nftAddress = await this.state.registry.methods.getNftArray().call();
 
-    // Load Nft Contracts
+    for (var i = 0; i < nftAddress.length; i++) {
+      const symbol = await this.state.registry.methods.nftSymbol(nftAddress[i]).call();
+      const nft = await this.state.registry.methods.getNftToken(symbol).call();
+      const abi = nft[2];
+      const uri = nft[3];
+      const abiResp = await fetch(abi);
+      const uriResp = await fetch(uri);
 
-    const superman = SupermanErc721.networks[networkId]
-    this.setState({ ercSuperman: superman.address })
-    const hulk = HulkErc721.networks[networkId]
-    this.setState({ ercHulk: hulk.address })
-    const deadpool = DeadpoolErc721.networks[networkId]
-    this.setState({ ercDeadpool: deadpool.address })
-    const johnwick = JohnWickErc721.networks[networkId]
-    this.setState({ ercJohnWick: johnwick.address })
+      if (!abiResp.ok)
+        throw new Error(abiResp.statusText);
 
-    // per ogni contratto guardo il proprietario
+      if (!uriResp.ok)
+        throw new Error(uriResp.statusText);
 
-    const sm = new web3.eth.Contract(SupermanErc721.abi, superman.address);
-    const hk = new web3.eth.Contract(HulkErc721.abi, hulk.address);
-    const dp = new web3.eth.Contract(DeadpoolErc721.abi, deadpool.address);
-    const jw = new web3.eth.Contract(JohnWickErc721.abi, johnwick.address);
+      const jsonAbi = await abiResp.json();
+      const jsonUri = await uriResp.json();
+      const erc721Addr = new web3.eth.Contract(jsonAbi.abi, nft[0]);
+      const nftOwner = await erc721Addr.methods.ownerOf(nft[1]).call();
 
-    const smId = await sm.methods.getTokenId().call();
-    this.setState({ smId })
-    const hkId = await hk.methods.getTokenId().call();
-    this.setState({ hkId })
-    const dpId = await dp.methods.getTokenId().call();
-    this.setState({ dpId })
-    const jwId = await jw.methods.getTokenId().call();
-    this.setState({ jwId })
-
-    const smOwner = await sm.methods.ownerOf(smId).call();
-    const hkOwner = await hk.methods.ownerOf(hkId).call();
-    const dpOwner = await dp.methods.ownerOf(dpId).call();
-    const jwOwner = await jw.methods.ownerOf(jwId).call();
-
-    const erc721Map = new Map()
-
-    this.setValue(erc721Map, smOwner, this.state.ercSuperman);
-    this.setValue(erc721Map, hkOwner, this.state.ercHulk);
-    this.setValue(erc721Map, dpOwner, this.state.ercDeadpool);
-    this.setValue(erc721Map, jwOwner, this.state.ercJohnWick);
-
-    this.setState({ erc721Map })
-    const set = this.state.erc721Map.get(this.state.userAccount);
-
-    if (set) {
-      const iterator = set.values()
-
-      if (this.state.userAccount == account1) {
-
-        for (var i = 0; i < set.size; i++) {
-          const addr = iterator.next().value;
-          this.getUri(addr);
-          const response = await fetch(this.state.json);
-
-          if (!response.ok)
-            throw new Error(response.statusText);
-
-          const json = await response.json();
-
-          this.state.metadata.push({ id: i, name: json.name, description: json.description, image: json.image });
-        }
-
-      } else if (this.state.userAccount == account2) {
-
-        for (var i = 0; i < set.size; i++) {
-          const addr = iterator.next().value;
-          this.getUri(addr);
-          const response = await fetch(this.state.json);
-
-          if (!response.ok)
-            throw new Error(response.statusText);
-
-          const json = await response.json();
-          this.state.metadata.push({ id: i, name: json.name, description: json.description, image: json.image });
-        }
-
-      } else if (this.state.userAccount == account3) {
-
-        for (var i = 0; i < set.size; i++) {
-          const addr = iterator.next().value;
-          this.getUri(addr);
-          const response = await fetch(this.state.json);
-
-          if (!response.ok)
-            throw new Error(response.statusText);
-
-          const json = await response.json();
-          this.state.metadata.push({ id: i, name: json.name, description: json.description, image: json.image });
-        }
-
+      if (nftOwner == this.state.userAccount) {
+        this.state.metadata.push({ id: i, name: jsonUri.name, symbol: jsonUri.symbol, description: jsonUri.description, image: jsonUri.image });
       }
     }
     this.setState({ loading: false })
@@ -178,7 +120,7 @@ class NftMarketplace extends Component {
 
   async handleNftChange(e) {
     const value = await e.target.value;
-    this.setState({ erc721: value });
+    this.setState({ erc721Symbol: value });
   }
 
   async handleAuctionPrice(e) {
@@ -201,37 +143,7 @@ class NftMarketplace extends Component {
     this.setState({ auctionMinutes: value });
   }
 
-  setValue(map, key, value) {
-    if (!map.has(key)) {
-      const erc721 = new Set();
-      erc721.add(value);
-      map.set(key, erc721);
-      return;
-    }
-    map.get(key).add(value);
-  }
-
-  getUri = async (addr) => {
-
-    if (addr == "0x6A9A5EcaCC11102b6668a3c6c4733f947ba63229") { // superman
-      const json = "https://my-json-server.typicode.com/MauriC94/NftMarketplace/tokens/2";
-      this.setState({ json })
-
-    } else if (addr == "0x2015cE0A7De265B46E9c3B6D28277B16760A7fF1") { // hulk
-      const json = "https://my-json-server.typicode.com/MauriC94/NftMarketplace/tokens/1";
-      this.setState({ json });
-
-    } else if (addr == "0x9624c62F134844D3f648d474Ea7Cb2b97a1Da05F") { // deadpool
-      const json = "https://my-json-server.typicode.com/MauriC94/NftMarketplace/tokens/0";
-      this.setState({ json });
-
-    } else if (addr == "0x957E125026a9D29C9633922edf31d581D665909f") { // john wick
-      const json = "https://my-json-server.typicode.com/MauriC94/NftMarketplace/tokens/3";
-      this.setState({ json });
-    }
-  };
-
-  handleAuctionForm(e) {
+  async handleAuctionForm(e) {
     e.preventDefault();
     const amount = this.state.auctionPrice;
     // tempo asta in secondi
@@ -241,45 +153,47 @@ class NftMarketplace extends Component {
     let minutesInSeconds = this.state.auctionMinutes * 60;
     const auctionTime = daysInSeconds + hoursInSeconds + minutesInSeconds;
 
+    // Token
+    const tokenContract = this.state.auctionToken;
+
     // contratto NFT
-    const contract = this.getNftContractAddress(this.state.erc721);
+    const nftData = await this.state.registry.methods.getNftToken(this.state.erc721Symbol).call()
     const tokenId = 1;
-    this.startNftAuction(amount, auctionTime, contract, tokenId);
+
+    this.startNftAuction(amount, auctionTime, nftData[0], tokenContract, tokenId);
   }
 
-  startNftAuction = (amount, auctionTime, erc721, id) => {
+  startNftAuction = (amount, auctionTime, erc721, erc20, id) => {
     this.setState({ loading: true })
-    this.state.nftMarket.methods.startAuction(amount, auctionTime, erc721, id).send({ from: this.state.userAccount }).on('transactionHash', (hash) => {
+    this.state.registry.methods.createAuction(amount, auctionTime, erc721, erc20, id).send({ from: this.state.userAccount }).on('transactionHash', (hash) => {
     })
     this.setState({ loading: false })
   }
 
-  getNftContractAddress(name) {
-    if (name === "Superman") {
-      return this.state.ercSuperman;
-    } else if (name === "Hulk") {
-      return this.state.ercHulk;
-    } else if (name === "Deadpool") {
-      return this.state.ercDeadpool
-    } else if (name === "JohnWick") {
-      return this.state.ercJohnWick
-    }
+  getAuctions = async (e) => {
+    this.props.history.push('/OngoingAuctions');
+  };
+
+  myAuctions() {
+    this.props.history.push('/OwnedAuctions');
   }
 
-  getAuctions = async (e) => {
-    e.preventDefault();
-    const auctionState = await this.state.nftMarket.methods.STATE().call()
-
-    if (auctionState == 1)
-      this.props.history.push('/OngoingAuction');
-    else {
-      alert("No Auction in Progress!");
-    }
-  };
+  withdraw(e) {
+    this.setState({ loading: true })
+    this.state.tokenErc20.methods.approve(this.state.auctionAddress, this.state.refund).send({ from: this.state.userAccount }).on('transactionHash', (hash) => {
+      this.state.nftMarket.methods.withdraw().send({ from: this.state.userAccount }).on('transactionHash', (hash) => {
+      })
+    })
+    this.setState({ loading: false })
+  }
 
   logoutUser() {
     this.props.history.push('/');
     localStorage.clear();
+  }
+
+  rewards() {
+    this.props.history.push('/Reward');
   }
 
   render() {
@@ -292,33 +206,40 @@ class NftMarketplace extends Component {
         < Navbar
           address={this.state.userAccount}
           getAuctions={this.getAuctions}
+          rewards={this.rewards}
+          withdraw={this.withdraw}
+          myAuctions={this.myAuctions}
           logoutUser={this.logoutUser}
           balance={this.state.balance}
+          refund={this.state.refund}
         />
+        <div className="card-body" id="nftMarket">
+          <h1 className="display-4 fw-normal">NFT Market</h1>
+        </div>
         <div className="container">
+          {content}
           <div className="row">
-            {content}
             {this.state.metadata.map(nft => (
               < Nft
-                key={nft.id}
+                key={nft.key}
                 name={nft.name}
+                symbol={nft.symbol}
                 description={nft.description}
                 image={nft.image}
               />
+
             ))}
           </div>
-          <div className="card-body">
-            <Auction
-              ercMetadata={this.state.metadata}
-              handleNftChange={this.handleNftChange}
-              handleAuctionPrice={this.handleAuctionPrice}
-              handleDayAuction={this.handleDayAuction}
-              handleHoursAuction={this.handleHoursAuction}
-              handleMinutesAuction={this.handleMinutesAuction}
-              handleAuctionForm={this.handleAuctionForm}
-            />
-          </div>
         </div>
+        <AuctionForm
+          ercMetadata={this.state.metadata}
+          handleNftChange={this.handleNftChange}
+          handleAuctionPrice={this.handleAuctionPrice}
+          handleDayAuction={this.handleDayAuction}
+          handleHoursAuction={this.handleHoursAuction}
+          handleMinutesAuction={this.handleMinutesAuction}
+          handleAuctionForm={this.handleAuctionForm}
+        />
       </>
     );
   }

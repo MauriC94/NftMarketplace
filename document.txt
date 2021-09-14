@@ -1,0 +1,7 @@
+await instance.addErc721("0x2015cE0A7De265B46E9c3B6D28277B16760A7fF1","https://raw.githubusercontent.com/MauriC94/NftMarketplace/main/src/abis/HulkErc721.json",1,"https://my-json-server.typicode.com/MauriC94/NftMarketplace/tokens/1","Hulk","HE")
+
+await instance.addErc721("0x9624c62F134844D3f648d474Ea7Cb2b97a1Da05F","https://raw.githubusercontent.com/MauriC94/NftMarketplace/main/src/abis/DeadpoolErc721.json",1,"https://my-json-server.typicode.com/MauriC94/NftMarketplace/tokens/0","Deadpool","DE")
+
+await instance.addErc721("0x6A9A5EcaCC11102b6668a3c6c4733f947ba63229","https://raw.githubusercontent.com/MauriC94/NftMarketplace/main/src/abis/SupermanErc721.json",1,"https://my-json-server.typicode.com/MauriC94/NftMarketplace/tokens/2","Superman","SE")
+
+await instance.addErc721("0x957E125026a9D29C9633922edf31d581D665909f","https://raw.githubusercontent.com/MauriC94/NftMarketplace/main/src/abis/JohnWickErc721.json",1,"https://my-json-server.typicode.com/MauriC94/NftMarketplace/tokens/3","JohnWick","JW")

@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
+import './Registry.sol';
+
 import './AuctionToken.sol';
 import './DeadpoolErc721.sol';
 import './SupermanErc721.sol';
@@ -21,15 +23,24 @@ contract NftMarket {
     uint256 public tokenId;
 
     enum auction_state{
-        OFF,STARTED,ENDED
+        STARTED,ENDED,CLOSED
+    }
+
+    enum nft{
+        PENDING,DELIVERED
     }
 
     address[]public bidders;
     uint public biddersCount = 0;
+    //mapping(address => uint) public bidders;
+
     mapping(address => uint) public pendingReturns;
     mapping(address => uint) public bids;
+    //address[]public bidders; 
 
-    auction_state public STATE;
+    auction_state public auctionState;
+    nft public nftState;
+
 
 
     modifier an_ongoing_auction(){ // controlla se l'asta è ancora aperta
@@ -49,31 +60,23 @@ contract NftMarket {
     event Sent(address from, address to, uint amount);
     event ERC721Transfer(address to, uint token);
     event ERC20Transfer(address to, uint amount);
-    
-    /*
-    constructor (
-            IERC20 _auctionToken
-    )
-    {
-            token = _auctionToken;
-            STATE = auction_state.OFF;
-    }
-    */
 
     constructor(
         uint256 amount, 
         uint time, 
         ERC721 _nftContract, 
         ERC20 _tokenContract,
-        uint256 erc721Id
-    ){
-       
-        auction_owner = payable(msg.sender);
+        uint256 erc721Id,
+        address owner
+    ){  
+        //auction_owner = payable(msg.sender);
+        auction_owner = payable(owner);
         auction_time = time;
         startingBid = amount;
         tokenId = erc721Id;
         auction_end = block.timestamp + time;
-        STATE=auction_state.STARTED;
+        auctionState=auction_state.STARTED;
+        nftState=nft.PENDING;
         erc721Contract = _nftContract;
         token = _tokenContract;
         //emit startEvent(amount,auction_end);
@@ -89,18 +92,15 @@ contract NftMarket {
             uint256 refund = bids[highestBidder];
             pendingReturns[highestBidder] += refund;
         }
+        if(bids[msg.sender] == 0){
+            addBidder();
+        }
         highestBidder = msg.sender;
         highestBid = amount;
         bids[msg.sender] += amount;
         token.transferFrom(msg.sender,address(this),amount);
 
         emit BidEvent(highestBidder,highestBid);
-    }
-  
-    function cancel_auction() external only_owner  an_ongoing_auction returns (bool){
-        STATE=auction_state.OFF;
-        emit CanceledEvent("Auction Cancelled", block.timestamp);
-        return true;
     }
 
     function setTokenIdNft(uint256 id) public returns(bool){
@@ -131,30 +131,29 @@ contract NftMarket {
         emit WithdrawalEvent(msg.sender,amount);
     }
 
-    function auctionEnd() payable public returns(bool){
-        require(block.timestamp > auction_end ,"You can't withdraw, the auction is still open");
-        STATE=auction_state.ENDED;
+    
+    function endAuction() public returns(bool){
+        auctionState=auction_state.ENDED;
+        return true;
+    }
+
+    function closeAuction() public returns(bool){
+        auctionState=auction_state.CLOSED;
+        return true;
+    }
+
+    function getReward() payable public returns(bool){
+        auctionState = auction_state.ENDED;
         erc721Contract.transferFrom(auction_owner, highestBidder, tokenId);
+        nftState=nft.DELIVERED;
         emit ERC721Transfer(highestBidder,tokenId);
-        resetAuction();
         return true;
     }
 
-    function getWin() public payable only_owner{
-        token.transfer(auction_owner,highestBid);
-        emit ERC20Transfer(auction_owner,highestBid);
-        highestBid = 0;
-    }
-
-    function resetAuction() public returns(bool){
-        auction_end = 0;
-        startingBid = 0;
-        tokenId = 0;
-
-        for(uint i=0; i<biddersCount; i++){
-            address bidder = bidders[i];
-            bids[bidder] = 0;
-        }
-        return true;
+    function getWin() public payable {
+        require(auctionState == auction_state.ENDED, "You need to end the auction first");
+        auctionState = auction_state.CLOSED;
+        token.transfer(msg.sender,highestBid);
+        emit ERC20Transfer(msg.sender,highestBid);
     }
 }

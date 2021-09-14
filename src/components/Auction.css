@@ -1,0 +1,35 @@
+#body{
+    width: 800px;
+}
+
+#winner{
+    border-style:solid;
+    margin-top: 50px;
+    margin-bottom: 50px;
+    width: 800px;
+}
+
+#nftCardBody{
+    margin-left: 240px;
+    margin-bottom: 50px;
+}
+
+#nftCard{
+    margin-bottom: 50px;
+}
+
+#end-button{
+    background-color: transparent;
+}
+
+#bidForm{
+    margin-bottom: 30px;
+}
+
+#winBody{
+    border-style: dotted;
+    border-collapse:unset;
+    background-color: transparent;
+    margin-top: 30px;
+    margin-bottom: 50px;
+}

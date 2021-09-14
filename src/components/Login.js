@@ -42,7 +42,7 @@ class Login extends Component {
   render() {
     return (
       <>
-        <div className="container">
+        <div className="container" id="loginForm">
           <main className="form-signin">
             <form onSubmit={this.handleSubmit}>
               <h1 className="h3 mb-3 fw-normal">Please sign in</h1>

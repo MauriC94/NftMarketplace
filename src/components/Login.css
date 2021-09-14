@@ -1,11 +1,10 @@
-
-body {
-  height: 100%;
-  
+#loginForm{
+  margin-top: 250px;
 }
 
 body {
-    text-align: center;
+  height: 100%;
+  text-align: center;
 }
 
 .form-signin {

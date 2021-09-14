@@ -4,13 +4,13 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 
-contract DeadpoolErc721 is ERC721URIStorage {
+contract GrootErc721 is ERC721URIStorage {
   using Counters for Counters.Counter;
   Counters.Counter private _tokenIds;
 
   uint256 newItemId;
 
-  constructor() ERC721("Deadpool","DE"){}
+  constructor() ERC721("Groot","GO"){}
 
   function awardItem(address recipient, string memory metadata)
   public

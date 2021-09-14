@@ -1,8 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 import "./NftMarket.sol";
+import './AuctionToken.sol';
+import './DeadpoolErc721.sol';
 
 contract Registry {
+
     struct NftAuction {
         address contractAddress;
         uint256 amount;
@@ -10,11 +13,11 @@ contract Registry {
         ERC721 erc721;
         ERC20 erc20;
         uint256 tokenId;
+        address owner;
     }
 
     struct NftData {
-        ERC721 contractAddress;
-        address owner;
+        address contractAddress;
         uint256 tokenId;
         string jsonAbi;
         string uri;
@@ -23,7 +26,7 @@ contract Registry {
     }
 
     struct TokenData {
-        ERC20 contractAddress;
+        address contractAddress;
         address owner;
         string jsonAbi;
         string name;
@@ -45,24 +48,28 @@ contract Registry {
 
     // mapping aste
     mapping(address => NftAuction) internal auctions;
+    address[] public allAuctions;
+    uint public contractCreated = 0;
     // mapping admin
     mapping(address => bool) internal isAdmin;
 
     //mapping erc20
-    mapping(string => TokenData) internal token;
+    mapping(string => TokenData) internal allToken;
     //mapping erc721
-    mapping(string => NftData) internal nft;
+    mapping(string => NftData) internal allNft;
 
-    //mapping erc20 property
-    mapping(address => TokenUser) internal tokenProperty;
-    //mapping erc721 property
-    mapping(address => NftUser) internal nftProperty;
+    //mapping erc721 address - symbol
+    mapping(address => string) public nftSymbol;
+    //mapping erc721 address - abi
+    mapping(address => string) public nftAbi;
+
+    address[]public nft;
+    address[]public token;
 
     event AdminAdded(address indexed _from, address indexed _who);
 
     constructor() {
         isAdmin[msg.sender] = true;
-        // inizializzare a 0 le struct size
         emit AdminAdded(address(0), msg.sender);
     }
 
@@ -73,8 +80,7 @@ contract Registry {
     }
 
     function addErc721(
-        ERC721 _erc721,
-        address _owner,
+        address _erc721,
         string memory _abi_json,
         uint256 _tokenId,
         string memory _uri,
@@ -85,42 +91,35 @@ contract Registry {
 
         NftData memory tempNftData = NftData({
             contractAddress: _erc721,
-            owner: _owner,
-            tokenId: _tokenId,
             jsonAbi: _abi_json,
+            tokenId: _tokenId,
             uri: _uri,
             name: _name,
             symbol: _symbol
         });
-        nft[_symbol] = tempNftData;
-
-        // set new data
-
-        nftProperty[_owner].nftSymbols.push(_symbol);
-        nftProperty[_owner].size += 1; 
+        allNft[_symbol] = tempNftData; 
+        nft.push(_erc721);
+        nftSymbol[_erc721] = _symbol;
+        nftAbi[_erc721] = _abi_json;
     }
 
-    function getOwnedNft(address _address) public view returns(uint,string[]memory array){
+    function getNftToken(string memory _symbol) public view returns(address,uint256,string memory, string memory,string memory,string memory){
         return(
-            nftProperty[_address].size,
-            nftProperty[_address].nftSymbols
+            allNft[_symbol].contractAddress,
+            allNft[_symbol].tokenId,
+            allNft[_symbol].jsonAbi,
+            allNft[_symbol].uri,
+            allNft[_symbol].name,
+            allNft[_symbol].symbol
         );
     }
 
-    function getNftToken(string memory _symbol) public view returns(ERC721,address,uint256,string memory, string memory,string memory,string memory){
-        return(
-            nft[_symbol].contractAddress,
-            nft[_symbol].owner,
-            nft[_symbol].tokenId,
-            nft[_symbol].jsonAbi,
-            nft[_symbol].uri,
-            nft[_symbol].name,
-            nft[_symbol].symbol
-        );
+    function getNftArray() public view returns(address[]memory){
+        return nft;
     }
 
     function addErc20(
-        ERC20 _erc20,
+        address _erc20,
         address _owner,
         string memory _abi_json,
         string memory _name,
@@ -137,29 +136,18 @@ contract Registry {
             symbol: _symbol,
             decimals: _decimals
         });
-        token[_symbol] = tempTokenData;
-
-        // set new data
-
-        tokenProperty[_owner].tokenSymbols.push(_symbol);
-        tokenProperty[_owner].size += 1;
+        allToken[_symbol] = tempTokenData;
+        token.push(_erc20);
     }
 
-    function getOwnedToken(address _address) public view returns(uint,string[]memory array){
+    function getToken(string memory _symbol) public view returns(address,address,string memory,string memory,string memory,uint8){
         return(
-            tokenProperty[_address].size,
-            tokenProperty[_address].tokenSymbols
-        );
-    } 
-
-    function getToken(string memory _symbol) public view returns(ERC20,address,string memory,string memory,string memory,uint8){
-        return(
-            token[_symbol].contractAddress,
-            token[_symbol].owner,
-            token[_symbol].jsonAbi,
-            token[_symbol].name,
-            token[_symbol].symbol,
-            token[_symbol].decimals
+            allToken[_symbol].contractAddress,
+            allToken[_symbol].owner,
+            allToken[_symbol].jsonAbi,
+            allToken[_symbol].name,
+            allToken[_symbol].symbol,
+            allToken[_symbol].decimals
         );
     }
 
@@ -175,7 +163,8 @@ contract Registry {
             _time,
             _erc721,
             _erc20,
-            _tokenId
+            _tokenId,
+            msg.sender
         );
         NftAuction memory tempAuctionData = NftAuction({
             contractAddress: address(auctionContract),
@@ -183,18 +172,23 @@ contract Registry {
             time: _time,
             erc721: _erc721,
             erc20: _erc20,
-            tokenId: _tokenId
+            tokenId: _tokenId,
+            owner: msg.sender
         });
         auctions[address(auctionContract)] = tempAuctionData;
+        allAuctions.push(address(auctionContract));
+        contractCreated++;
     }
 
-    function getAuction(address _addr) public view returns(uint256,uint256,ERC721,ERC20,uint256){
+    function getAuction(address _addr) public view returns(uint256,uint256,ERC721,ERC20,uint256,address,address){
         return(
             auctions[_addr].amount,
             auctions[_addr].time,
             auctions[_addr].erc721,
             auctions[_addr].erc20,
-            auctions[_addr].tokenId
+            auctions[_addr].tokenId,
+            auctions[_addr].contractAddress,
+            auctions[_addr].owner
         );
     }
 }
