@@ -40,6 +40,12 @@ class OwndedAuctions extends Component {
         const registry = new web3.eth.Contract(Registry.abi, registryData.address)
         this.setState({ registry })
 
+        const username = await registry.methods.userName(address).call();
+        this.setState({ username })
+
+        const datetime = ((new Date()).toLocaleDateString());
+        this.setState({ datetime })
+
         const token = AuctionToken.networks[networkId]
         const auctionToken = new web3.eth.Contract(AuctionToken.abi, token.address)
         const balance = await auctionToken.methods.balanceOf(this.state.userAccount).call()
@@ -54,7 +60,7 @@ class OwndedAuctions extends Component {
             let owner = auctions[6];
             let nftState = await nftMarket.methods.nftState().call();
             let auctionState = await nftMarket.methods.auctionState().call();
-            const nftSymbol = await registry.methods.nftSymbol(auctions[2]).call();
+            const nftSymbol = await registry.methods.nftSymbol(auctions[3]).call();
             const nftData = await registry.methods.getNftToken(nftSymbol).call();
 
             const uri = nftData[3];
@@ -65,11 +71,11 @@ class OwndedAuctions extends Component {
 
             const json = await response.json();
 
-            console.log(auctionState)
+            const date = new Date(auctions[1]).getDate();
 
             // verifico se proprietario dell'asta
-            if (owner == this.state.userAccount && nftState != 1 && auctionState != 2) {
-                this.state.auctionData.push({ id: i, name: json.name, symbol: json.symbol, description: json.description, image: json.image, amount: auctions[0], time: auctions[1], auction: auctions[5] });
+            if (owner == this.state.userAccount && nftState == 1 && auctionState != 2) {
+                this.state.auctionData.push({ id: i, name: json.name, symbol: json.symbol, description: json.description, image: json.image, datetime: date, amount: auctions[0], time: auctions[2], auction: auctions[5] });
             }
         }
         this.setState({ loading: false })
@@ -116,6 +122,8 @@ class OwndedAuctions extends Component {
             <>
                 < Navbar
                     address={this.state.userAccount}
+                    username={this.state.username}
+                    datetime={this.state.datetime}
                     myAuctions={this.myAuctions}
                     getAuctions={this.getAuctions}
                     logoutUser={this.logoutUser}
@@ -134,6 +142,7 @@ class OwndedAuctions extends Component {
                                 description={data.description}
                                 symbol={data.symbol}
                                 image={data.image}
+                                date={data.datetime}
                                 amount={data.amount}
                                 time={data.time}
                                 auction={data.auction}

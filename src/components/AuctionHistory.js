@@ -5,9 +5,10 @@ import NftReward from './NftReward'
 import Navbar from './Navbar'
 import NftMarket from '../abis/NftMarket.json'
 import AuctionToken from '../abis/AuctionToken.json'
-import './OwnedAuction.css';
 
-class Reward extends Component {
+import AuctionNftEnded from './AuctionNftEnded'
+
+class AuctionHistory extends Component {
 
     constructor(props) {
         super(props);
@@ -17,6 +18,7 @@ class Reward extends Component {
             loading: true
         }
         this.logoutUser = this.logoutUser.bind(this);
+        this.viewAuction = this.viewAuction.bind(this);
     }
 
     async componentDidMount() {
@@ -55,15 +57,17 @@ class Reward extends Component {
             const auctionData = await registry.methods.allAuctions(i).call();
             const nftMarket = new web3.eth.Contract(NftMarket.abi, auctionData);
             this.setState({ nftMarket })
-            let highestBidder = await nftMarket.methods.highestBidder().call();
             const auctions = await registry.methods.getAuction(auctionData).call();
             let auctionState = await nftMarket.methods.auctionState().call();
             let nftState = await nftMarket.methods.nftState().call();
-            const highestBid = await nftMarket.methods.highestBid().call();
-            const nftSymbol = await registry.methods.nftSymbol(auctions[3]).call();
-            const nftData = await registry.methods.getNftToken(nftSymbol).call();
+            let highestBidder = await nftMarket.methods.highestBidder().call();
+            let userNameWinner = await registry.methods.userName(highestBidder).call();
             const timestamp = auctions[1]/1000;
             const auctionDate = new Date(timestamp*1000).toLocaleDateString();
+            let highestBid = await nftMarket.methods.highestBid().call();
+            const nftSymbol = await registry.methods.nftSymbol(auctions[3]).call();
+            const nftData = await registry.methods.getNftToken(nftSymbol).call();
+
             const uri = nftData[3];
             const response = await fetch(uri);
 
@@ -72,32 +76,11 @@ class Reward extends Component {
 
             const json = await response.json();
 
-            if (auctionState == 2 && this.state.userAccount == highestBidder && nftState == 2) {
-                this.state.auctionData.push({ id: i, name: json.name, symbol: json.symbol, description: json.description, image: json.image, price: highestBid , date: auctionDate});
+            if (auctionState == 2 && nftState == 2) {
+                this.state.auctionData.push({ id: i, name: json.name, symbol: json.symbol, description: json.description, image: json.image, winner: userNameWinner, price: highestBid, winnerAddress: highestBidder, datetime: auctionDate });
             }
 
         }
-        this.setState({ loading: false })
-    }
-
-    getReward = async (auction) => {
-        const auctionOwn = await this.state.registry.methods.getAuction(auction).call();
-
-        let urlJsonAbi = await this.state.registry.methods.nftAbi(auctionOwn[2]).call();
-
-        const resp = await fetch(urlJsonAbi);
-
-        if (!resp.ok)
-            throw new Error(resp.statusText);
-
-        const jsonAbi = await resp.json();
-        const erc721Addr = new this.state.web3.eth.Contract(jsonAbi.abi, auctionOwn[2])
-        const nftOwner = await erc721Addr.methods.ownerOf(1).call();
-
-        this.setState({ loading: true })
-
-        this.state.nftMarket.methods.getReward().send({ from: this.state.userAccount }).on('transactionHash', (hash) => {
-        });
         this.setState({ loading: false })
     }
 
@@ -119,6 +102,14 @@ class Reward extends Component {
         localStorage.clear();
     }
 
+    async viewAuction(symbol) {
+        const data = await this.state.registry.methods.getNftToken(symbol).call();
+        const erc721 = data[0];
+        const auctionAddress = await this.state.registry.methods.nftAuction(erc721).call();
+        localStorage.setItem('auction', auctionAddress);
+        this.props.history.push('/AuctionView');
+    }
+
     render() {
         return (
             <>
@@ -133,25 +124,30 @@ class Reward extends Component {
                     balance={this.state.balance}
                 />
                 <div className="card-body">
-                    <h1 className="display-4 fw-normal">My Winning Auctions</h1>
+                    <h1 className="display-4 fw-normal">Auction History</h1>
                 </div>
                 <div className="container" style={{ marginTop: "40px" }}>
 
                     <div className="row">
                         {this.state.auctionData.map(data => (
-                            <NftReward
-                                key={data.id}
+                            <AuctionNftEnded
+                                key={data.key}
                                 name={data.name}
                                 description={data.description}
                                 symbol={data.symbol}
                                 image={data.image}
+                                winner={data.winner}
+                                winnerAddress={data.winnerAddress}
                                 price={data.price}
-                                date={data.date}
+                                datetime={data.datetime}
+                                viewAuction={this.viewAuction}
+                                address={this.state.userAccount}
                             />
                         ))}
+
                     </div>
                 </div>
             </>
         );
     }
-} export default Reward;
+} export default AuctionHistory;

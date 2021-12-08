@@ -7,6 +7,8 @@ import Login from './Login'
 import NftMarketplace from './NftMarketplace'
 import OwnedAuctions from './OwnedAuctions'
 import OngoingAuctions from './OngoingAuctions'
+import AuctionHistory from './AuctionHistory'
+import AuctionView from './AuctionView'
 import Reward from './Reward'
 
 class App extends Component {
@@ -49,7 +51,9 @@ class App extends Component {
             <Route path="/OngoingAuctions" exact component={OngoingAuctions} />
             <Route path="/OwnedAuctions" exact component={OwnedAuctions} />
             <Route path="/Reward" exact component={Reward} />
+            <Route path="/AuctionHistory" exact component={AuctionHistory} />
             <Route path="/Auction" exact component={Auction} />
+            <Route path="/AuctionView" exact component={AuctionView} />
           </Switch>
         </div>
       </Router>

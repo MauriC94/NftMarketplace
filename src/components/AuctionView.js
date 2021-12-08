@@ -13,7 +13,7 @@ import BidForm from './BidForm'
 
 import './Auction.css';
 
-class Auction extends Component {
+class AuctionView extends Component {
 
     constructor(props) {
         super(props);
@@ -33,6 +33,7 @@ class Auction extends Component {
         this.handleAuctionPrice = this.handleAuctionPrice.bind(this);
         this.handleAuctionForm = this.handleAuctionForm.bind(this);
         this.myAuctions = this.myAuctions.bind(this);
+        this.endAuction = this.endAuction.bind(this);
         this.homepage = this.homepage.bind(this);
         this.getBidders = this.getBidders.bind(this);
         this.logoutUser = this.logoutUser.bind(this);
@@ -49,21 +50,26 @@ class Auction extends Component {
         const networkId = await web3.eth.net.getId()
         const address = localStorage.getItem('address');
         this.setState({ userAccount: address })
+
         const auctionAddress = localStorage.getItem('auction');
         this.setState({ auctionAddress })
-        const registryData = Registry.networks[networkId];
-        // Load AuctionData
 
+        const registryData = Registry.networks[networkId];
+
+        // Load AuctionData
         if (auctionAddress && registryData) {
             const nftMarket = new web3.eth.Contract(NftMarket.abi, auctionAddress)
             this.setState({ nftMarket })
             let owner = await nftMarket.methods.auction_owner().call();
             const registry = new web3.eth.Contract(Registry.abi, registryData.address)
             this.setState({ registry })
+            const username = await registry.methods.userName(address).call();
+            this.setState({ username })
             let startingBid = await nftMarket.methods.startingBid().call();
             this.setState({ startingBid })
             let highestBid = await nftMarket.methods.highestBid().call();
             this.setState({ highestBid })
+
             let winner = "";
             let highestBidder = await nftMarket.methods.highestBidder().call();
             if (highestBidder == "0x0000000000000000000000000000000000000000") {
@@ -73,8 +79,6 @@ class Auction extends Component {
             }
             this.setState({winner})
             this.setState({ highestBidder })
-            const username = await registry.methods.userName(address).call();
-            this.setState({ username })
             const datetime = ((new Date()).toLocaleDateString());
             this.setState({ datetime })
             let auctionState = await nftMarket.methods.auctionState().call();
@@ -174,14 +178,15 @@ class Auction extends Component {
         this.setState({ loading: true })
 
         this.state.tokenErc20.methods.approve(this.state.auctionAddress, this.state.bid).send({ from: this.state.userAccount }).on('transactionHash', (hash) => {
-            this.state.nftMarket.methods.bid(this.state.bid).send({ from: this.state.userAccount }).on('transactionHash', (hash) => {
-            })
         })
+        this.state.nftMarket.methods.bid(this.state.bid).send({ from: this.state.userAccount }).on('transactionHash', (hash) => {
+        })
+
+        this.setState({ auctionBids: this.state.bid })
         this.setState({ loading: false })
     }
 
     async getBidders() {
-
         this.setState({ loading: true })
         const size = await this.state.nftMarket.methods.biddersCount().call();
         const newArray = this.state.auctionBids.slice();
@@ -203,6 +208,16 @@ class Auction extends Component {
         this.setState({ refund })
     }
 
+    getWinBid(e) {
+
+        this.setState({ loading: true })
+        this.state.tokenErc20.methods.approve(this.state.auctionAddress, this.state.highestBid).send({ from: this.state.userAccount }).on('transactionHash', (hash) => {
+        })
+        this.state.erc721Addr.methods.isApprovedForAll(this.state.userAccount, this.state.highestBidder).send({ from: this.state.userAccount }).on('transactionHash', (hash) => {
+        })
+        this.setState({ loading: false })
+    }
+
     handleTimerOver = async () => {
         this.setState({ timer: true })
         const winner = await this.state.nftMarket.methods.highestBidder().call();
@@ -212,10 +227,10 @@ class Auction extends Component {
         const state = await this.state.nftMarket.methods.auctionState().call();
 
         if (state == 0 && this.state.highestBidder == "0x0000000000000000000000000000000000000000") {
-            this.state.nftMarket.methods.closeAuction().send({ from: this.state.userAccount }).on('transactionHash', (hash) => {
+            await this.state.nftMarket.methods.closeAuction().send({ from: this.state.userAccount }).on('transactionHash', (hash) => {
             })
         } else if (state == 0) {
-            this.state.nftMarket.methods.endAuction().send({ from: this.state.userAccount }).on('transactionHash', (hash) => {
+            await this.state.nftMarket.methods.endAuction().send({ from: this.state.userAccount }).on('transactionHash', (hash) => {
             })
         }
         this.setState({ loading: false })
@@ -238,7 +253,6 @@ class Auction extends Component {
         this.props.history.push('/NftMarketplace');
     }
 
-    /*
     endAuction() {
         this.setState({ loading: true })
         this.state.erc721Addr.methods.approve(this.state.auctionAddress, 1).send({ from: this.state.nftOwner }).on('transactionHash', (hash) => {
@@ -246,21 +260,9 @@ class Auction extends Component {
             })
         })
         this.setState({ loading: false })
-    }*/
+    }
 
     render() {
-        let content
-        if (!this.state.owner) {
-            content = <div className="container" style={{ marginTop: "40px" }} id="bidForm">
-                <h3>
-                    {this.state.timer ? " " : "Make your Bid!"}
-                </h3>
-                <BidForm
-                    handleAuctionPrice={this.handleAuctionPrice}
-                    handleAuctionForm={this.handleAuctionForm}
-                />
-            </div>
-        }
         return (
             <>
                 <Navbar
@@ -310,15 +312,14 @@ class Auction extends Component {
                             < Bidders
                                 key={bid.id}
                                 bidder={bid.bidder}
-                                bidAmount={bid.bidAmount}
                                 address={bid.address}
+                                bidAmount={bid.bidAmount}
                             />
                         ))}
                     </ul>
-                    {content}
                 </div>
             </>
         );
     }
 
-} export default Auction;
+} export default AuctionView;

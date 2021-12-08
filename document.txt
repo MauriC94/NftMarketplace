@@ -1,7 +1,31 @@
-await instance.addErc721("0x2015cE0A7De265B46E9c3B6D28277B16760A7fF1","https://raw.githubusercontent.com/MauriC94/NftMarketplace/main/src/abis/HulkErc721.json",1,"https://my-json-server.typicode.com/MauriC94/NftMarketplace/tokens/1","Hulk","HE")
+HULK
 
-await instance.addErc721("0x9624c62F134844D3f648d474Ea7Cb2b97a1Da05F","https://raw.githubusercontent.com/MauriC94/NftMarketplace/main/src/abis/DeadpoolErc721.json",1,"https://my-json-server.typicode.com/MauriC94/NftMarketplace/tokens/0","Deadpool","DE")
+await instance.addErc721("0xCc9F5fD26c0b6Ac3A81479CCc89c9B2445835b5E","https://raw.githubusercontent.com/MauriC94/NftMarketplace/main/src/abis/HulkErc721.json",1,"https://my-json-server.typicode.com/MauriC94/NftMarketplace/tokens/1","Hulk","HE")
 
-await instance.addErc721("0x6A9A5EcaCC11102b6668a3c6c4733f947ba63229","https://raw.githubusercontent.com/MauriC94/NftMarketplace/main/src/abis/SupermanErc721.json",1,"https://my-json-server.typicode.com/MauriC94/NftMarketplace/tokens/2","Superman","SE")
+CAPTAIN AMERICA
 
-await instance.addErc721("0x957E125026a9D29C9633922edf31d581D665909f","https://raw.githubusercontent.com/MauriC94/NftMarketplace/main/src/abis/JohnWickErc721.json",1,"https://my-json-server.typicode.com/MauriC94/NftMarketplace/tokens/3","JohnWick","JW")
+await instance.addErc721("0x42DF0a11194217f958Dd373Ecec3FCF3B9710884","https://raw.githubusercontent.com/MauriC94/NftMarketplace/main/src/abis/CaptainAmericaErc721.json",1,"https://my-json-server.typicode.com/MauriC94/NftMarketplace/tokens/0","Captain America","CA")
+
+SUPERMAN
+
+await instance.addErc721("0x6fa9CD096bBFc06722332f71D38895e474119F12","https://raw.githubusercontent.com/MauriC94/NftMarketplace/main/src/abis/SupermanErc721.json",1,"https://my-json-server.typicode.com/MauriC94/NftMarketplace/tokens/2","Superman","SE")
+
+CINDERELLA
+
+await instance.addErc721("0x5e296D3724022E502b218b4f778ea13126a4DABA","https://raw.githubusercontent.com/MauriC94/NftMarketplace/main/src/abis/CinderellaErc721.json",1,"https://my-json-server.typicode.com/MauriC94/NftMarketplace/tokens/3","Cinderella","CR")
+
+GROOT
+
+await instance.addErc721("0xfe0015DDe393a107e54E6c8db90c43a34B884e1D","https://raw.githubusercontent.com/MauriC94/NftMarketplace/main/src/abis/GrootErc721.json",1,"https://my-json-server.typicode.com/MauriC94/NftMarketplace/tokens/4","Groot","GO")
+
+CYBORG
+
+await instance.addErc721("0x8a680146f7ab75C2b6e19A54DB6BB24a2B32deC3","https://raw.githubusercontent.com/MauriC94/NftMarketplace/main/src/abis/CyborgErc721.json",1,"https://my-json-server.typicode.com/MauriC94/NftMarketplace/tokens/5","Cyborg","HC")
+
+PETER PAN
+
+await instance.addErc721("0xd6BA28A3f648e801135D47545574EcaA868cdE0b","https://raw.githubusercontent.com/MauriC94/NftMarketplace/main/src/abis/PeterPanErc721.json",1,"https://my-json-server.typicode.com/MauriC94/NftMarketplace/tokens/6","Peter Pan","PP")
+
+AXL ROSE
+
+await instance.addErc721("0xf7C6F18BAEdaB52EA5DEEFdeEC4592bf540A8273","https://raw.githubusercontent.com/MauriC94/NftMarketplace/main/src/abis/AxlRoseErc721.json",1,"https://my-json-server.typicode.com/MauriC94/NftMarketplace/tokens/7","Axl Rose","AR")

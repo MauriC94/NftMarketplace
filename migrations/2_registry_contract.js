@@ -1,5 +1,6 @@
 const Registry = artifacts.require("Registry");
 const AuctionToken = artifacts.require("AuctionToken");
+const NftMarket = artifacts.require("NftMarket");
 
 const Superman = artifacts.require("SupermanErc721.sol");
 const Hulk = artifacts.require("HulkErc721.sol");
@@ -11,9 +12,11 @@ const CaptainAmerica = artifacts.require("CaptainAmericaErc721.sol");
 const Groot = artifacts.require("GrootErc721.sol");
 
 
-module.exports = async function (deployer,accounts) {
+module.exports = async function (deployer) {
   //const account = "0x138cd0dF5B11Bf9dda23f04231Bb23db225C6dC3";
   await deployer.deploy(Registry);
+  //await deployer.deploy(NftMarket);
+  /*
   await deployer.deploy(Superman);
   await deployer.deploy(Hulk);
   await deployer.deploy(Cyborg);
@@ -22,4 +25,5 @@ module.exports = async function (deployer,accounts) {
   await deployer.deploy(AxlRose);
   await deployer.deploy(CaptainAmerica);
   await deployer.deploy(Groot);
+  */
 };

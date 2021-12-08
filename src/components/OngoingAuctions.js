@@ -42,6 +42,12 @@ class OngoingAuctions extends Component {
         const registry = new web3.eth.Contract(Registry.abi, registryData.address)
         this.setState({ registry })
 
+        const username = await registry.methods.userName(address).call();
+        this.setState({ username })
+
+        const datetime = ((new Date()).toLocaleDateString());
+        this.setState({datetime})
+
         const token = AuctionToken.networks[networkId]
         const auctionToken = new web3.eth.Contract(AuctionToken.abi, token.address)
         const balance = await auctionToken.methods.balanceOf(this.state.userAccount).call()
@@ -56,7 +62,7 @@ class OngoingAuctions extends Component {
             const auctions = await registry.methods.getAuction(auctionData).call();
             let owner = auctions[6];
             let state = await nftMarket.methods.auctionState().call();
-            const nftSymbol = await registry.methods.nftSymbol(auctions[2]).call();
+            const nftSymbol = await registry.methods.nftSymbol(auctions[3]).call();
             const nftData = await registry.methods.getNftToken(nftSymbol).call();
 
             const uri = nftData[3];
@@ -69,7 +75,7 @@ class OngoingAuctions extends Component {
 
             // verifico se in corso
             if (state == 0 && owner != this.state.userAccount || state == 1 && owner == highestBidder) {
-                this.state.auctionData.push({ id: i, name: json.name, symbol: json.symbol, description: json.description, image: json.image, amount: auctions[0], time: auctions[1], auction: auctions[5] });
+                this.state.auctionData.push({ id: i, name: json.name, symbol: json.symbol, description: json.description, image: json.image, amount: auctions[0], time: auctions[2], auction: auctions[5] });
             }
         }
         this.setState({ loading: false })
@@ -115,12 +121,14 @@ class OngoingAuctions extends Component {
             <>
                 < Navbar
                     address={this.state.userAccount}
+                    username={this.state.username}
                     getAuctions={this.getAuctions}
                     myAuctions={this.myAuctions}
                     homepage={this.homepage}
                     rewards={this.rewards}
                     logoutUser={this.logoutUser}
                     balance={this.state.balance}
+                    datetime={this.state.datetime}
                 />
                 <div className="card-body">
                     <h1 className="display-4 fw-normal">Auctions in Progress</h1>
